@@ -5,213 +5,86 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>計算トレーニング</title>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f4f0; min-height: 100vh; padding: 2rem 1rem; }
-.app { max-width: 600px; margin: 0 auto; }
-.header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.title { font-size: 20px; font-weight: 600; color: #1a1a1a; }
-.progress { font-size: 13px; color: #888; }
-.level-selector { display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.level-btn { padding: 6px 14px; font-size: 13px; border-radius: 8px; border: 1px solid #d0cfe8; background: #fff; color: #666; cursor: pointer; }
-.level-btn:hover { background: #f0effe; }
-.level-btn.active { background: #eeedfe; color: #3c3489; border-color: #afa9ec; font-weight: 600; }
-.question-card { background: #fff; border: 1px solid #e5e4f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
-.q-meta { font-size: 12px; color: #aaa; margin-bottom: 8px; }
-.q-text { font-size: 22px; font-weight: 600; color: #1a1a1a; font-family: 'Courier New', monospace; line-height: 1.4; }
-.input-row { display: flex; gap: 10px; margin-top: 1rem; align-items: center; }
-.ans-input { flex: 1; font-size: 18px; font-family: 'Courier New', monospace; padding: 8px 12px; border: 1px solid #d0cfe8; border-radius: 8px; background: #fff; color: #1a1a1a; outline: none; }
-.ans-input:focus { border-color: #7f77dd; box-shadow: 0 0 0 2px rgba(127,119,221,0.2); }
-.submit-btn { padding: 8px 20px; font-size: 14px; font-weight: 600; border-radius: 8px; border: 1px solid #d0cfe8; background: #f5f4f0; color: #1a1a1a; cursor: pointer; white-space: nowrap; }
-.submit-btn:hover { background: #eeedfe; border-color: #afa9ec; color: #3c3489; }
-.feedback { padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-top: 10px; }
-.feedback.correct { background: #eaf3de; color: #27500a; border: 1px solid #97c459; }
-.feedback.wrong { background: #fcebeb; color: #791f1f; border: 1px solid #f09595; }
-.feedback.hint { background: #e6f1fb; color: #0c447c; border: 1px solid #85b7eb; }
-.next-btn { margin-top: 10px; padding: 8px 20px; font-size: 14px; border-radius: 8px; border: 1px solid #afa9ec; background: #eeedfe; color: #3c3489; cursor: pointer; font-weight: 600; }
-.next-btn:hover { background: #cecbf6; }
-.result-card { background: #fff; border: 1px solid #e5e4f0; border-radius: 12px; padding: 2rem; text-align: center; }
-.score-big { font-size: 48px; font-weight: 700; color: #534ab7; }
-.score-label { font-size: 14px; color: #888; margin-top: 4px; }
-.stats-row { display: flex; gap: 12px; margin-top: 1.5rem; justify-content: center; }
-.stat-box { background: #f5f4f0; border-radius: 8px; padding: 12px 16px; min-width: 90px; }
-.stat-num { font-size: 22px; font-weight: 600; color: #1a1a1a; }
-.stat-lbl { font-size: 12px; color: #888; margin-top: 2px; }
-.restart-btn { margin-top: 1.5rem; padding: 10px 28px; font-size: 14px; border-radius: 8px; border: 1px solid #afa9ec; background: #eeedfe; color: #3c3489; cursor: pointer; font-weight: 600; }
-.restart-btn:hover { background: #cecbf6; }
-.progress-bar { height: 4px; background: #e5e4f0; border-radius: 2px; margin-bottom: 1.5rem; }
-.progress-fill { height: 4px; background: #7f77dd; border-radius: 2px; transition: width 0.3s; }
-.hint-btn { padding: 6px 12px; font-size: 12px; border-radius: 8px; border: 1px solid #e5e4f0; background: transparent; color: #aaa; cursor: pointer; }
-.hint-btn:hover { color: #185fa5; border-color: #85b7eb; }
-.review-list { margin-top: 1rem; text-align: left; }
-.review-item { font-size: 13px; padding: 6px 0; border-bottom: 1px solid #e5e4f0; display: flex; justify-content: space-between; gap: 8px; font-family: 'Courier New', monospace; flex-wrap: wrap; }
-.r-correct { color: #3b6d11; }
-.r-wrong { color: #a32d2d; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;min-height:100vh;padding:1.5rem 1rem;}
+.app{max-width:480px;margin:0 auto;}
+.header{display:flex;align-items:baseline;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;}
+.title{font-size:20px;font-weight:600;color:#1a1a1a;}
+.prog{font-size:13px;color:#888;}
+.level-selector{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;}
+.lbtn{padding:5px 11px;font-size:12px;border-radius:8px;border:1px solid #d0cfe8;background:#fff;color:#666;cursor:pointer;}
+.lbtn.active{background:#eeedfe;color:#3c3489;border-color:#afa9ec;font-weight:600;}
+.pbar-wrap{height:4px;background:#e5e4f0;border-radius:2px;margin-bottom:1rem;}
+.pbar-fill{height:4px;background:#7f77dd;border-radius:2px;transition:width 0.3s;}
+.qcard{background:#fff;border:1px solid #e5e4f0;border-radius:12px;padding:1.25rem;margin-bottom:0.75rem;}
+.qmeta{font-size:12px;color:#aaa;margin-bottom:6px;}
+.qtext{font-size:20px;font-weight:600;color:#1a1a1a;font-family:'Courier New',monospace;line-height:1.4;min-height:2em;}
+.display-row{display:flex;align-items:center;gap:8px;margin-top:12px;}
+.ans-display{flex:1;font-size:22px;font-family:'Courier New',monospace;font-weight:600;color:#1a1a1a;background:#f5f4f0;border:1px solid #d0cfe8;border-radius:8px;padding:8px 12px;min-height:44px;letter-spacing:1px;}
+.ans-display.placeholder{color:#bbb;font-weight:400;font-size:14px;}
+.clear-btn{padding:8px 14px;font-size:16px;border-radius:8px;border:1px solid #d0cfe8;background:#f5f4f0;color:#666;cursor:pointer;min-width:44px;min-height:44px;}
+.feedback{padding:10px 12px;border-radius:8px;font-size:14px;margin-top:8px;}
+.feedback.correct{background:#eaf3de;color:#27500a;border:1px solid #97c459;}
+.feedback.wrong{background:#fcebeb;color:#791f1f;border:1px solid #f09595;}
+.feedback.hint{background:#e6f1fb;color:#0c447c;border:1px solid #85b7eb;}
+.next-btn{margin-top:8px;padding:10px 20px;font-size:14px;border-radius:8px;border:1px solid #afa9ec;background:#eeedfe;color:#3c3489;cursor:pointer;font-weight:600;min-height:44px;}
+.numpad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px;}
+.nkey{padding:0;height:52px;font-size:20px;font-weight:600;border-radius:10px;border:1px solid #d0cfe8;background:#fff;color:#1a1a1a;cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-tap-highlight-color:transparent;}
+.nkey:active{background:#f0effe;transform:scale(0.96);}
+.nkey.accent{background:#eeedfe;color:#3c3489;border-color:#afa9ec;font-size:15px;}
+.nkey.neg{font-size:14px;color:#666;}
+.sep-note{font-size:12px;color:#aaa;margin-top:6px;text-align:center;}
+.result-card{background:#fff;border:1px solid #e5e4f0;border-radius:12px;padding:1.5rem;text-align:center;}
+.score-big{font-size:48px;font-weight:700;color:#534ab7;}
+.score-lbl{font-size:14px;color:#888;margin-top:4px;}
+.stats-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:1rem;}
+.sbox{background:#f5f4f0;border-radius:8px;padding:10px;text-align:center;}
+.snum{font-size:20px;font-weight:600;color:#1a1a1a;}
+.slbl{font-size:12px;color:#888;margin-top:2px;}
+.restart-btn{margin-top:1.25rem;padding:12px 28px;font-size:14px;border-radius:8px;border:1px solid #afa9ec;background:#eeedfe;color:#3c3489;cursor:pointer;font-weight:600;}
+.review-list{margin-top:1rem;text-align:left;}
+.review-item{font-size:12px;padding:5px 0;border-bottom:1px solid #e5e4f0;font-family:'Courier New',monospace;}
+.rc{color:#3b6d11;}.rw{color:#a32d2d;}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+<div class="app">
   <div class="header">
     <span class="title">計算トレーニング</span>
-    <span class="progress" id="prog">レベルを選んでスタート</span>
+    <span class="prog" id="prog">レベルを選んでスタート</span>
   </div>
   <div class="level-selector">
-    <button class="level-btn active" onclick="setLevel(0)">四則演算</button>
-    <button class="level-btn" onclick="setLevel(1)">分数・小数</button>
-    <button class="level-btn" onclick="setLevel(2)">一次方程式</button>
-    <button class="level-btn" onclick="setLevel(3)">二次方程式</button>
-    <button class="level-btn" onclick="setLevel(4)">三次方程式</button>
+    <button class="lbtn active" onclick="setLevel(0)">四則演算</button>
+    <button class="lbtn" onclick="setLevel(1)">分数</button>
+    <button class="lbtn" onclick="setLevel(2)">一次</button>
+    <button class="lbtn" onclick="setLevel(3)">二次</button>
+    <button class="lbtn" onclick="setLevel(4)">三次</button>
   </div>
-  <div class="progress-bar"><div class="progress-fill" id="pbar" style="width:0%"></div></div>
+  <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
   <div id="main"></div>
 </div>
 <script>
-const TOTAL = 10;
-let level = 0, questions = [], qIdx = 0, score = 0, wrongList = [], answered = false;
-
-function setLevel(l) {
-  level = l;
-  document.querySelectorAll('.level-btn').forEach((b,i) => b.classList.toggle('active', i===l));
-  startGame();
-}
-function startGame() {
-  questions = []; qIdx = 0; score = 0; wrongList = [];
-  for (let i = 0; i < TOTAL; i++) questions.push(generateQ(level));
-  showQ();
-}
+const TOTAL=10;
+let level=0,questions=[],qIdx=0,score=0,wrongList=[],answered=false,inputVal='';
+function setLevel(l){level=l;document.querySelectorAll('.lbtn').forEach((b,i)=>b.classList.toggle('active',i===l));startGame();}
+function startGame(){questions=[];qIdx=0;score=0;wrongList=[];for(let i=0;i<TOTAL;i++)questions.push(generateQ(level));showQ();}
 function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){[a,b]=[b,a%b];}return a;}
 function ri(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
 function riNZ(a,b){let v;do{v=ri(a,b);}while(v===0);return v;}
-function generateQ(lv){
-  if(lv===0)return genArith();
-  if(lv===1)return genFrac();
-  if(lv===2)return genLinear();
-  if(lv===3)return genQuad();
-  if(lv===4)return genCubic();
-}
-function genArith(){
-  const ops=['+','-','×','÷'],op=ops[ri(0,3)];
-  let a,b,ans,text,hint;
-  if(op==='+'){a=ri(1,99);b=ri(1,99);ans=a+b;text=`${a} + ${b} = ?`;hint=`${a}と${b}を足す`;}
-  else if(op==='-'){a=ri(10,99);b=ri(1,a);ans=a-b;text=`${a} - ${b} = ?`;hint=`${a}から${b}を引く`;}
-  else if(op==='×'){a=ri(2,12);b=ri(2,12);ans=a*b;text=`${a} × ${b} = ?`;hint=`${a}の${b}倍`;}
-  else{b=ri(2,9);a=ri(2,9);ans=a;text=`${a*b} ÷ ${b} = ?`;hint=`${a*b}を${b}等分`;}
-  return{text,correctAns:[String(ans)],hint,type:'num'};
-}
-function genFrac(){
-  const a1=ri(1,5),b1=ri(2,8),a2=ri(1,5),b2=ri(2,8),mode=Math.random()<0.5?'add':'mul';
-  if(mode==='add'){
-    const num=a1*b2+a2*b1,den=b1*b2,g=gcd(num,den),rn=num/g,rd=den/g;
-    const ans=rd===1?String(rn):`${rn}/${rd}`;
-    return{text:`${a1}/${b1} + ${a2}/${b2} = ? (分数で)`,correctAns:[ans],hint:`通分: 分母を${b1*b2}に揃える`,type:'frac'};
-  } else {
-    const num=a1*a2,den=b1*b2,g=gcd(num,den),rn=num/g,rd=den/g;
-    const ans=rd===1?String(rn):`${rn}/${rd}`;
-    return{text:`${a1}/${b1} × ${a2}/${b2} = ?`,correctAns:[ans],hint:`分子同士・分母同士を掛けてから約分`,type:'frac'};
-  }
-}
-function genLinear(){
-  const x=riNZ(-10,10),a=riNZ(1,9),b=ri(-20,20),c=a*x+b;
-  const bStr=b>=0?`+ ${b}`:`- ${Math.abs(b)}`;
-  return{text:`${a}x ${bStr} = ${c}`,correctAns:[String(x)],hint:`両辺から${b}を引き、${a}で割る`,type:'eq'};
-}
-function genQuad(){
-  const r1=riNZ(-6,6),r2=riNZ(-6,6),B=-(r1+r2),C=r1*r2;
-  const Bstr=B>0?`+ ${B}`:B<0?`- ${Math.abs(B)}`:'';
-  const Cstr=C>0?`+ ${C}`:C<0?`- ${Math.abs(C)}`:'';
-  const text=`x² ${Bstr}x ${Cstr} = 0`;
-  const answers=[...new Set([r1,r2])].map(String).sort((a,b)=>Number(a)-Number(b));
-  const f1=r1>=0?`- ${r1}`:`+ ${Math.abs(r1)}`,f2=r2>=0?`- ${r2}`:`+ ${Math.abs(r2)}`;
-  return{text,correctAns:answers,hint:`(x ${f1})(x ${f2}) = 0 に因数分解`,type:'eq2'};
-}
-function genCubic(){
-  const r1=riNZ(-4,4),r2=riNZ(-4,4),r3=riNZ(-4,4);
-  const B=-(r1+r2+r3),C=r1*r2+r2*r3+r1*r3,D=-(r1*r2*r3);
-  const tB=B===0?'':(B>0?` + ${B}x²`:` - ${Math.abs(B)}x²`);
-  const tC=C===0?'':(C>0?` + ${C}x`:` - ${Math.abs(C)}x`);
-  const tD=D===0?'':(D>0?` + ${D}`:` - ${Math.abs(D)}`);
-  const text=`x³${tB}${tC}${tD} = 0`;
-  const answers=[...new Set([r1,r2,r3])].map(String).sort((a,b)=>Number(a)-Number(b));
-  return{text,correctAns:answers,hint:`±(${Math.abs(D)}の因数)を代入して整数解を探す`,type:'eq3'};
-}
-function judgeAnswer(userInput,correctAns){
-  const norm=s=>s.trim().replace(/\s+/g,'').replace(/　/g,'');
-  const userParts=userInput.split(/[,、，]/).map(norm).filter(Boolean).sort((a,b)=>Number(a)-Number(b));
-  const correct=[...correctAns].sort((a,b)=>Number(a)-Number(b));
-  if(userParts.length!==correct.length)return false;
-  return userParts.every((v,i)=>v===correct[i]);
-}
-function showQ(){
-  answered=false;
-  const q=questions[qIdx];
-  document.getElementById('prog').textContent=`問 ${qIdx+1} / ${TOTAL}`;
-  document.getElementById('pbar').style.width=`${(qIdx/TOTAL)*100}%`;
-  const typeLabel={num:'計算',frac:'分数',eq:'一次方程式',eq2:'二次方程式',eq3:'三次方程式'};
-  let placeholder='答えを入力';
-  if(q.type==='eq2')placeholder='解（複数なら「,」で区切る）';
-  if(q.type==='eq3')placeholder='解（「,」で区切る）';
-  document.getElementById('main').innerHTML=`
-    <div class="question-card">
-      <div class="q-meta">${typeLabel[q.type]}</div>
-      <div class="q-text">${q.text}</div>
-      <div class="input-row">
-        <input class="ans-input" id="ainput" type="text" placeholder="${placeholder}" autocomplete="off"/>
-        <button class="submit-btn" onclick="checkAns()">確認</button>
-        <button class="hint-btn" onclick="showHint()">ヒント</button>
-      </div>
-      <div id="feedback"></div>
-    </div>`;
-  document.getElementById('ainput').addEventListener('keydown',e=>{if(e.key==='Enter'&&!answered)checkAns();});
-  document.getElementById('ainput').focus();
-}
-function showHint(){
-  document.getElementById('feedback').innerHTML=`<div class="feedback hint">ヒント：${questions[qIdx].hint}</div>`;
-}
-function checkAns(){
-  if(answered)return;
-  const q=questions[qIdx];
-  const raw=document.getElementById('ainput').value;
-  if(!raw.trim())return;
-  const ok=judgeAnswer(raw,q.correctAns);
-  answered=true;
-  const displayAns=q.correctAns.join(', ');
-  if(ok){
-    score++;
-    document.getElementById('feedback').innerHTML=`<div class="feedback correct">正解！ 答え：${displayAns}</div><button class="next-btn" onclick="nextQ()">次の問題 →</button>`;
-  } else {
-    wrongList.push({q:q.text,correct:displayAns,user:raw.trim()});
-    document.getElementById('feedback').innerHTML=`<div class="feedback wrong">不正解。正解：${displayAns}</div><button class="next-btn" onclick="nextQ()">次の問題 →</button>`;
-  }
-}
+function generateQ(lv){if(lv===0)return genArith();if(lv===1)return genFrac();if(lv===2)return genLinear();if(lv===3)return genQuad();return genCubic();}
+function genArith(){const ops=['+','-','×','÷'],op=ops[ri(0,3)];let a,b,ans,text,hint;if(op==='+'){a=ri(1,99);b=ri(1,99);ans=a+b;text=`${a} + ${b} = ?`;hint=`${a}と${b}を足す`;}else if(op==='-'){a=ri(10,99);b=ri(1,a);ans=a-b;text=`${a} - ${b} = ?`;hint=`${a}から${b}を引く`;}else if(op==='×'){a=ri(2,12);b=ri(2,12);ans=a*b;text=`${a} × ${b} = ?`;hint=`${a}の${b}倍`;}else{b=ri(2,9);a=ri(2,9);ans=a;text=`${a*b} ÷ ${b} = ?`;hint=`${a*b}を${b}等分`;}return{text,correctAns:[String(ans)],hint,type:'num'};}
+function genFrac(){const a1=ri(1,5),b1=ri(2,8),a2=ri(1,5),b2=ri(2,8),mode=Math.random()<0.5?'add':'mul';if(mode==='add'){const num=a1*b2+a2*b1,den=b1*b2,g=gcd(num,den),rn=num/g,rd=den/g;const ans=rd===1?String(rn):`${rn}/${rd}`;return{text:`${a1}/${b1} + ${a2}/${b2} = ?`,correctAns:[ans],hint:`通分: 分母を${b1*b2}に揃える`,type:'frac'};}else{const num=a1*a2,den=b1*b2,g=gcd(num,den),rn=num/g,rd=den/g;const ans=rd===1?String(rn):`${rn}/${rd}`;return{text:`${a1}/${b1} × ${a2}/${b2} = ?`,correctAns:[ans],hint:`分子同士・分母同士を掛けてから約分`,type:'frac'};}}
+function genLinear(){const x=riNZ(-10,10),a=riNZ(1,9),b=ri(-20,20),c=a*x+b;const bStr=b>=0?`+ ${b}`:`- ${Math.abs(b)}`;return{text:`${a}x ${bStr} = ${c}`,correctAns:[String(x)],hint:`両辺から${b}を引き、${a}で割る`,type:'eq'};}
+function genQuad(){const r1=riNZ(-6,6),r2=riNZ(-6,6),B=-(r1+r2),C=r1*r2;const Bstr=B>0?`+ ${B}`:B<0?`- ${Math.abs(B)}`:'';const Cstr=C>0?`+ ${C}`:C<0?`- ${Math.abs(C)}`:'';const answers=[...new Set([r1,r2])].map(String).sort((a,b)=>Number(a)-Number(b));const f1=r1>=0?`- ${r1}`:`+ ${Math.abs(r1)}`,f2=r2>=0?`- ${r2}`:`+ ${Math.abs(r2)}`;return{text:`x² ${Bstr}x ${Cstr} = 0`,correctAns:answers,hint:`(x ${f1})(x ${f2}) = 0`,type:'eq2'};}
+function genCubic(){const r1=riNZ(-4,4),r2=riNZ(-4,4),r3=riNZ(-4,4);const B=-(r1+r2+r3),C=r1*r2+r2*r3+r1*r3,D=-(r1*r2*r3);const tB=B===0?'':(B>0?` + ${B}x²`:` - ${Math.abs(B)}x²`);const tC=C===0?'':(C>0?` + ${C}x`:` - ${Math.abs(C)}x`);const tD=D===0?'':(D>0?` + ${D}`:` - ${Math.abs(D)}`);const answers=[...new Set([r1,r2,r3])].map(String).sort((a,b)=>Number(a)-Number(b));return{text:`x³${tB}${tC}${tD} = 0`,correctAns:answers,hint:`±(${Math.abs(D)}の因数)を代入`,type:'eq3'};}
+function judgeAnswer(userInput,correctAns){const norm=s=>s.trim().replace(/\s+/g,'').replace(/　/g,'');const userParts=userInput.split(/[,、，]/).map(norm).filter(Boolean).sort((a,b)=>Number(a)-Number(b));const correct=[...correctAns].sort((a,b)=>Number(a)-Number(b));if(userParts.length!==correct.length)return false;return userParts.every((v,i)=>v===correct[i]);}
+function updateDisplay(){const el=document.getElementById('adisplay');if(!el)return;if(inputVal===''){el.textContent='?';el.className='ans-display placeholder';}else{el.textContent=inputVal;el.className='ans-display';}}
+function keyPress(v){if(answered)return;if(v==='BS'){inputVal=inputVal.slice(0,-1);}else if(v==='NEG'){if(inputVal.startsWith('-'))inputVal=inputVal.slice(1);else if(inputVal!=='')inputVal='-'+inputVal;}else if(v===','){if(!inputVal.endsWith(',')&&inputVal!=='')inputVal+=',';}else if(v==='/'){if(!inputVal.includes('/')&&inputVal!==''&&!inputVal.endsWith(','))inputVal+='/';}else{const last=inputVal.split(',').pop()||'';if(last.length<6)inputVal+=v;}updateDisplay();}
+function showQ(){answered=false;inputVal='';const q=questions[qIdx];document.getElementById('prog').textContent=`問 ${qIdx+1} / ${TOTAL}`;document.getElementById('pbar').style.width=`${(qIdx/TOTAL)*100}%`;const typeLabel={num:'計算',frac:'分数',eq:'一次方程式',eq2:'二次方程式',eq3:'三次方程式'};const multi=q.type==='eq2'||q.type==='eq3';const frac=q.type==='frac';const numpadKeys=[{v:'7',l:'7'},{v:'8',l:'8'},{v:'9',l:'9'},{v:'4',l:'4'},{v:'5',l:'5'},{v:'6',l:'6'},{v:'1',l:'1'},{v:'2',l:'2'},{v:'3',l:'3'},{v:'NEG',l:'±',cls:'neg'},{v:'0',l:'0'},{v:'BS',l:'⌫',cls:'accent'}];let extraRow='';if(multi){extraRow=`<button class="nkey neg" onclick="keyPress(',')">，区切り</button><button class="nkey" style="grid-column:span 2;" onclick="checkAns()"><span style="font-size:15px;font-weight:600;">確認</span></button>`;}else if(frac){extraRow=`<button class="nkey neg" onclick="keyPress('/')">&nbsp;/&nbsp;（分数）</button><button class="nkey" style="grid-column:span 2;" onclick="checkAns()"><span style="font-size:15px;font-weight:600;">確認</span></button>`;}else{extraRow=`<button class="nkey" style="grid-column:span 3;" onclick="checkAns()"><span style="font-size:15px;font-weight:600;">確認</span></button>`;}document.getElementById('main').innerHTML=`<div class="qcard"><div class="qmeta">${typeLabel[q.type]}</div><div class="qtext">${q.text}</div><div class="display-row"><div class="ans-display placeholder" id="adisplay">?</div><button class="clear-btn" onclick="inputVal='';updateDisplay()">C</button></div><div id="feedback"></div><div class="numpad" id="numpad">${numpadKeys.map(k=>`<button class="nkey${k.cls?' '+k.cls:''}" onclick="keyPress('${k.v}')">${k.l}</button>`).join('')}${extraRow}</div>${multi?'<div class="sep-note">複数の解はカンマで区切って入力</div>':''}</div>`;}
+function showHint(){const q=questions[qIdx];document.getElementById('feedback').innerHTML=`<div class="feedback hint">ヒント：${q.hint}</div>`;}
+function checkAns(){if(answered)return;const q=questions[qIdx];const raw=inputVal.trim();if(!raw||raw===',')return;const ok=judgeAnswer(raw,q.correctAns);answered=true;const displayAns=q.correctAns.join(', ');const fb=document.getElementById('feedback');if(ok){score++;fb.innerHTML=`<div class="feedback correct">正解！ 答え：${displayAns}</div><button class="next-btn" onclick="nextQ()">次の問題 →</button>`;}else{wrongList.push({q:q.text,correct:displayAns,user:raw});fb.innerHTML=`<div class="feedback wrong">不正解。正解：${displayAns}</div><button class="nkey accent" style="margin-top:6px;width:auto;padding:0 14px;height:40px;font-size:13px;" onclick="showHint()">ヒントを見る</button><button class="next-btn" style="margin-left:8px;" onclick="nextQ()">次の問題 →</button>`;}document.getElementById('numpad').style.opacity='0.4';document.getElementById('numpad').style.pointerEvents='none';}
 function nextQ(){qIdx++;if(qIdx>=TOTAL){showResult();return;}showQ();}
-function showResult(){
-  document.getElementById('pbar').style.width='100%';
-  document.getElementById('prog').textContent='完了！';
-  const pct=Math.round(score/TOTAL*100);
-  let comment='';
-  if(pct===100)comment='完璧です。計算能力に隙がない。';
-  else if(pct>=80)comment='なかなかの精度。もう少しで満点。';
-  else if(pct>=60)comment='悪くない。ミスの傾向を確認しましょう。';
-  else comment='まだ伸びしろがあります。復習して再挑戦を。';
-  let reviewHtml='';
-  if(wrongList.length>0){
-    reviewHtml=`<div class="review-list">
-      <div style="font-size:13px;color:#888;margin-bottom:6px;">間違えた問題</div>
-      ${wrongList.map(w=>`<div class="review-item"><span class="r-wrong">${w.q}</span><span>正解：<span class="r-correct">${w.correct}</span>　入力：${w.user}</span></div>`).join('')}
-    </div>`;
-  }
-  document.getElementById('main').innerHTML=`
-    <div class="result-card">
-      <div class="score-big">${score} / ${TOTAL}</div>
-      <div class="score-label">${comment}</div>
-      <div class="stats-row">
-        <div class="stat-box"><div class="stat-num">${pct}%</div><div class="stat-lbl">正答率</div></div>
-        <div class="stat-box"><div class="stat-num">${score}</div><div class="stat-lbl">正解</div></div>
-        <div class="stat-box"><div class="stat-num">${TOTAL-score}</div><div class="stat-lbl">不正解</div></div>
-      </div>
-      ${reviewHtml}
-      <button class="restart-btn" onclick="startGame()">同じレベルで再挑戦</button>
-    </div>`;
-}
+function showResult(){document.getElementById('pbar').style.width='100%';document.getElementById('prog').textContent='完了！';const pct=Math.round(score/TOTAL*100);let comment='';if(pct===100)comment='完璧です。計算能力に隙がない。';else if(pct>=80)comment='なかなかの精度。もう少しで満点。';else if(pct>=60)comment='悪くない。ミスの傾向を確認しましょう。';else comment='まだ伸びしろがあります。復習して再挑戦を。';let reviewHtml='';if(wrongList.length>0){reviewHtml=`<div class="review-list"><div style="font-size:12px;color:#888;margin-bottom:4px;">間違えた問題</div>${wrongList.map(w=>`<div class="review-item"><span class="rw">${w.q}</span><br>正解：<span class="rc">${w.correct}</span>　入力：${w.user}</div>`).join('')}</div>`;}document.getElementById('main').innerHTML=`<div class="result-card"><div class="score-big">${score} / ${TOTAL}</div><div class="score-lbl">${comment}</div><div class="stats-row"><div class="sbox"><div class="snum">${pct}%</div><div class="slbl">正答率</div></div><div class="sbox"><div class="snum">${score}</div><div class="slbl">正解</div></div><div class="sbox"><div class="snum">${TOTAL-score}</div><div class="slbl">不正解</div></div></div>${reviewHtml}<button class="restart-btn" onclick="startGame()">再挑戦</button></div>`;}
 startGame();
 </script>
 </body>
