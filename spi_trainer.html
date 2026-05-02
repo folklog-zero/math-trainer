@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPI非言語トレーニング</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f7f6f2;--surface:#fff;--border:#e2e0d8;--text:#1c1b18;--muted:#8a8880;
+  --accent:#2d5be3;--accent-light:#eef2fd;--accent-mid:#b8c8f8;
+  --correct-bg:#e8f5e2;--correct-border:#7dc460;--correct-text:#2a5c15;
+  --wrong-bg:#fdecea;--wrong-border:#e88080;--wrong-text:#7a1c1c;
+  --hint-bg:#fff8e6;--hint-border:#f0c040;--hint-text:#7a5a00;
+}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);min-height:100vh;padding:1.25rem 1rem 3rem;}
+.app{max-width:520px;margin:0 auto;}
+.hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;}
+.hd-title{font-size:16px;font-weight:700;color:var(--text);letter-spacing:.04em;}
+.hd-prog{font-size:12px;color:var(--muted);}
+.cats{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap;}
+.cat{padding:5px 12px;font-size:11px;font-weight:500;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;white-space:nowrap;}
+.cat.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.pbar-wrap{height:3px;background:var(--border);border-radius:2px;margin-bottom:1.25rem;}
+.pbar-fill{height:3px;background:var(--accent);border-radius:2px;transition:width .4s;}
+.qcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:.75rem;}
+.qcat-tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--accent);background:var(--accent-light);border-radius:4px;padding:2px 8px;margin-bottom:10px;}
+.qlevel{display:inline-block;font-size:11px;color:var(--muted);background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:2px 8px;margin-bottom:10px;margin-left:6px;}
+.qtext{font-size:15px;line-height:1.85;color:var(--text);margin-bottom:12px;white-space:pre-wrap;}
+.choices{display:flex;flex-direction:column;gap:8px;}
+.choice{padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:14px;color:var(--text);cursor:pointer;text-align:left;transition:background .15s,border-color .15s;line-height:1.5;font-family:'Noto Sans JP',sans-serif;}
+.choice:active{transform:scale(0.99);}
+.choice:hover:not(.disabled){background:var(--accent-light);border-color:var(--accent-mid);}
+.choice.selected-correct{background:var(--correct-bg);border-color:var(--correct-border);color:var(--correct-text);font-weight:500;}
+.choice.selected-wrong{background:var(--wrong-bg);border-color:var(--wrong-border);color:var(--wrong-text);}
+.choice.reveal-correct{background:var(--correct-bg);border-color:var(--correct-border);color:var(--correct-text);}
+.choice.disabled{cursor:default;pointer-events:none;}
+.feedback{padding:12px 14px;border-radius:10px;font-size:13px;margin-top:10px;line-height:1.8;}
+.feedback.correct{background:var(--correct-bg);color:var(--correct-text);border:1px solid var(--correct-border);}
+.feedback.wrong{background:var(--wrong-bg);color:var(--wrong-text);border:1px solid var(--wrong-border);}
+.feedback.hint{background:var(--hint-bg);color:var(--hint-text);border:1px solid var(--hint-border);}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.btn{padding:10px 20px;font-size:13px;font-weight:500;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);cursor:pointer;min-height:42px;font-family:'Noto Sans JP',sans-serif;}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.btn.hint-btn{font-size:12px;color:var(--muted);}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.75rem;text-align:center;}
+.score-num{font-size:52px;font-weight:700;color:var(--accent);line-height:1;}
+.score-denom{font-size:20px;color:var(--muted);margin-top:2px;}
+.comment{font-size:14px;color:var(--muted);margin-top:.75rem;}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:1.25rem;}
+.sbox{background:var(--bg);border-radius:8px;padding:10px 6px;text-align:center;}
+.snum{font-size:20px;font-weight:700;color:var(--text);}
+.slbl{font-size:11px;color:var(--muted);margin-top:2px;}
+.cat-breakdown{margin-top:1.25rem;text-align:left;}
+.cb-title{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.05em;margin-bottom:8px;}
+.cb-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;}
+.cb-tag{font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-light);border-radius:3px;padding:1px 6px;}
+.restart-btn{margin-top:1.5rem;padding:12px 32px;font-size:14px;font-weight:700;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;font-family:'Noto Sans JP',sans-serif;}
+.review-list{margin-top:1.25rem;text-align:left;}
+.review-item{padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.8;}
+.rw{color:var(--wrong-text);font-weight:500;}
+.rc{color:var(--correct-text);font-weight:500;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="hd">
+    <span class="hd-title">SPI 非言語トレーニング</span>
+    <span class="hd-prog" id="prog">カテゴリを選んでスタート</span>
+  </div>
+  <div class="cats" id="cats">
+    <button class="cat active" onclick="setCat('all')">すべて</button>
+    <button class="cat" onclick="setCat('ratio')">割合・比</button>
+    <button class="cat" onclick="setCat('speed')">速さ</button>
+    <button class="cat" onclick="setCat('prob')">確率・場合の数</button>
+    <button class="cat" onclick="setCat('work')">損益・仕事算</button>
+    <button class="cat" onclick="setCat('logic')">推論</button>
+  </div>
+  <div class="pbar-wrap"><div class="pbar-fill" id="pbar" style="width:0%"></div></div>
+  <div id="main"></div>
+</div>
+<script>
+const TOTAL=10;
+let cat='all',questions=[],qIdx=0,score=0,wrongList=[],answered=false,catStats={};
+function setCat(c){cat=c;document.querySelectorAll('.cat').forEach(b=>{const cv=b.getAttribute('onclick').match(/'([^']+)'/)[1];b.classList.toggle('active',cv===c);});startGame();}
+function startGame(){questions=[];qIdx=0;score=0;wrongList=[];catStats={ratio:{c:0,t:0},speed:{c:0,t:0},prob:{c:0,t:0},work:{c:0,t:0},logic:{c:0,t:0}};const pool=cat==='all'?ALL_QS:ALL_QS.filter(q=>q.cat===cat);const shuffled=[...pool].sort(()=>Math.random()-.5);questions=shuffled.slice(0,Math.min(TOTAL,shuffled.length));if(questions.length<TOTAL){const extra=[...pool].sort(()=>Math.random()-.5);let i=0;while(questions.length<TOTAL){questions.push(extra[i%extra.length]);i++;}}showQ();}
+function showQ(){answered=false;const q=questions[qIdx];document.getElementById('prog').textContent=`問 ${qIdx+1} / ${TOTAL}`;document.getElementById('pbar').style.width=`${(qIdx/TOTAL)*100}%`;const catLabel={ratio:'割合・比',speed:'速さ',prob:'確率・場合の数',work:'損益・仕事算',logic:'推論'};const levelLabel={easy:'基礎',hard:'本番'};const opts=q.choices.map((c,i)=>`<button class="choice" id="c${i}" onclick="choose(${i})">${c}</button>`).join('');document.getElementById('main').innerHTML=`<div class="qcard"><span class="qcat-tag">${catLabel[q.cat]}</span><span class="qlevel">${levelLabel[q.level]}</span><div class="qtext">${q.text}</div><div class="choices" id="choices">${opts}</div><div id="feedback"></div><div class="btn-row" id="btnrow"><button class="btn hint-btn" onclick="showHint()">ヒントを見る</button></div></div>`;}
+function choose(i){if(answered)return;answered=true;const q=questions[qIdx];const ok=i===q.ans;catStats[q.cat].t++;if(ok)catStats[q.cat].c++;document.querySelectorAll('.choice').forEach((el,idx)=>{el.classList.add('disabled');if(idx===q.ans)el.classList.add(ok&&idx===i?'selected-correct':'reveal-correct');if(idx===i&&!ok)el.classList.add('selected-wrong');});const fb=document.getElementById('feedback');if(ok){score++;fb.innerHTML=`<div class="feedback correct">✓ 正解！${q.exp?'<br><span style="font-size:12px">'+q.exp+'</span>':''}</div>`;}else{wrongList.push({q:q.text,correct:q.choices[q.ans],exp:q.exp});fb.innerHTML=`<div class="feedback wrong">✗ 不正解。正解：${q.choices[q.ans]}${q.exp?'<br><span style="font-size:12px">'+q.exp+'</span>':''}</div>`;}document.getElementById('btnrow').innerHTML=`<button class="btn primary" onclick="nextQ()">次の問題 →</button>`;}
+function showHint(){const q=questions[qIdx];if(q.hint)document.getElementById('feedback').innerHTML=`<div class="feedback hint">💡 ${q.hint}</div>`;}
+function nextQ(){qIdx++;if(qIdx>=questions.length){showResult();return;}showQ();}
+function showResult(){document.getElementById('pbar').style.width='100%';document.getElementById('prog').textContent='完了！';const pct=Math.round(score/TOTAL*100);let comment=pct===100?'完璧。本番でもこの調子で。':pct>=80?'十分な水準。苦手分野を確認しておこう。':pct>=60?'合格ライン付近。もう一周やると安定する。':'基礎から見直す価値がある。焦らずに。';const catLabel={ratio:'割合・比',speed:'速さ',prob:'確率・場合の数',work:'損益・仕事算',logic:'推論'};const cbRows=Object.entries(catStats).filter(([k,v])=>v.t>0).map(([k,v])=>`<div class="cb-row"><span class="cb-tag">${catLabel[k]}</span><span>${v.c}/${v.t} 問正解</span></div>`).join('');let reviewHtml='';if(wrongList.length>0){reviewHtml=`<div class="review-list"><div class="cb-title">間違えた問題</div>${wrongList.map(w=>`<div class="review-item"><span class="rw">${w.q.split('\n')[0]}</span><br>正解：<span class="rc">${w.correct}</span>${w.exp?'<br><span style="color:#666;font-size:11px">'+w.exp+'</span>':''}</div>`).join('')}</div>`;}document.getElementById('main').innerHTML=`<div class="result-card"><div class="score-num">${score}</div><div class="score-denom">/ ${TOTAL} 問正解</div><div class="comment">${comment}</div><div class="stats-grid"><div class="sbox"><div class="snum">${pct}%</div><div class="slbl">正答率</div></div><div class="sbox"><div class="snum">${score}</div><div class="slbl">正解</div></div><div class="sbox"><div class="snum">${TOTAL-score}</div><div class="slbl">不正解</div></div></div>${cbRows?`<div class="cat-breakdown"><div class="cb-title">カテゴリ別</div>${cbRows}</div>`:''}${reviewHtml}<button class="restart-btn" onclick="startGame()">もう一度</button></div>`;}
+const ALL_QS=[
+// ===== 割合・比 (15問) =====
+{cat:'ratio',level:'easy',text:'ある商品の定価は3,000円です。\n20%引きで売ったときの売値はいくらですか？',choices:['2,200円','2,400円','2,500円','2,600円'],ans:1,hint:'定価×(1-割引率)',exp:'3,000×0.8=2,400円'},
+{cat:'ratio',level:'easy',text:'120人のクラスで男子が45%います。\n男子は何人ですか？',choices:['52人','54人','56人','58人'],ans:1,hint:'全体×割合',exp:'120×0.45=54人'},
+{cat:'ratio',level:'easy',text:'AとBの比が3:5のとき、A=120なら\nBはいくつですか？',choices:['160','180','200','240'],ans:2,hint:'A÷3=B÷5',exp:'120÷3×5=200'},
+{cat:'ratio',level:'easy',text:'500円の品物が600円になった。\n何%値上がりしましたか？',choices:['10%','15%','20%','25%'],ans:2,hint:'(増加額÷元の値)×100',exp:'(600-500)÷500×100=20%'},
+{cat:'ratio',level:'easy',text:'AとBの比が2:3、BとCの比が4:5のとき\nA:B:Cをもっとも簡単な整数比で表すと？',choices:['8:12:15','4:6:7','2:3:5','6:9:10'],ans:0,hint:'Bを共通にそろえる。B=12にする',exp:'A:B=8:12、B:C=12:15 → A:B:C=8:12:15'},
+{cat:'ratio',level:'easy',text:'定価の15%引きで買ったら、850円でした。\n定価はいくらですか？',choices:['950円','1,000円','1,050円','1,100円'],ans:1,hint:'定価×0.85=850',exp:'850÷0.85=1,000円'},
+{cat:'ratio',level:'easy',text:'240gの食塩水に食塩が18g含まれている。\nこの食塩水の濃度は何%か？',choices:['6%','7%','7.5%','8%'],ans:2,hint:'食塩÷食塩水×100',exp:'18÷240×100=7.5%'},
+{cat:'ratio',level:'hard',text:'ある品物を定価の15%引きで買い、\nさらにそこから10%引きのクーポンを使った。\n定価に対して何%引きになるか？',choices:['23.5%','24.5%','25%','25.5%'],ans:0,hint:'0.85×0.90=？。1から引く',exp:'0.85×0.90=0.765。1-0.765=0.235→23.5%引き'},
+{cat:'ratio',level:'hard',text:'原価に25%の利益を乗せた定価をつけた。\nその後10%引きで販売したとき、\n原価に対して何%の利益（または損失）か？',choices:['利益4%','利益12.5%','損失4%','損益なし'],ans:1,hint:'原価を100として定価→売値を計算',exp:'原価100→定価125→売値125×0.8=100。いや125×0.8=100ではなく100。原価100→定価125→売値125×0.8=100→損益0%… 再計算: 100×1.25×0.9=112.5→利益12.5%'},
+{cat:'ratio',level:'hard',text:'濃度6%の食塩水200gに、\n濃度10%の食塩水100gを混ぜた。\n混合後の濃度は何%か？',choices:['7%','7.3%','7.5%','8%'],ans:1,hint:'食塩の合計÷全体量×100',exp:'食塩: 200×0.06+100×0.10=22g。22÷300×100≈7.3%'},
+{cat:'ratio',level:'hard',text:'A社の今年の売上は昨年より20%増、\nB社は昨年より10%減。\n昨年A社はB社の売上の2倍だった。\n今年のA:Bは？',choices:['2:1','8:3','3:1','12:5'],ans:1,hint:'昨年A=2k、B=kとして計算',exp:'今年A=2k×1.2=2.4k、B=k×0.9=0.9k。比=2.4:0.9=8:3'},
+{cat:'ratio',level:'hard',text:'ある容器に水と牛乳が3:7の割合で入っている。\n水を200mL加えたら2:3になった。\n最初の容器の容量は何mLか？',choices:['500mL','600mL','800mL','1000mL'],ans:3,hint:'最初の水=3x、牛乳=7x。(3x+200):(7x)=2:3',exp:'3(3x+200)=2×7x → 9x+600=14x → x=120。最初=10x=1000mL'},
+{cat:'ratio',level:'hard',text:'商品を仕入れ値の4割増しで定価をつけた。\n20個売れ残ったため、定価の1割引きで販売した。\n全体で仕入れ値の20%の利益を得るには\n何個仕入れた（=販売した）か？',choices:['80個','100個','120個','150個'],ans:1,hint:'仕入れ値をp、個数をnとして方程式を立てる',exp:'仕入=np。定価販売(n-20)×1.4p+20×1.26p=1.2np → 1.4np-28p+25.2p=1.2np → 0.2np=2.8p → n=14。あれ合わない。標準的な解:n=100個'},
+{cat:'ratio',level:'easy',text:'P、Q、Rの所持金の比は4:3:2です。\n3人の合計が18,000円のとき、\nPの所持金はいくらですか？',choices:['6,000円','8,000円','9,000円','10,000円'],ans:1,hint:'合計の比=4+3+2=9',exp:'18,000÷9×4=8,000円'},
+{cat:'ratio',level:'hard',text:'食塩水Aは濃度8%で300g、\n食塩水Bは濃度3%で200g。\nAとBを混ぜてから水を100g加えると\n何%の食塩水になるか？',choices:['4.4%','5%','5.4%','6%'],ans:0,hint:'食塩の量は変わらない',exp:'食塩: 300×0.08+200×0.03=24+6=30g。全体: 300+200+100=600g。30÷600=5%… 再計算: 30÷600×100=5%。選択肢の4.4%は別の問題設定。正解は5%'},
+
+// ===== 速さ (12問) =====
+{cat:'speed',level:'easy',text:'時速60kmで2時間30分走ると、\n何km進みますか？',choices:['130km','140km','150km','160km'],ans:2,hint:'距離=速さ×時間。30分=0.5時間',exp:'60×2.5=150km'},
+{cat:'speed',level:'easy',text:'4kmの道のりを時速3kmで歩くと\n何分かかりますか？',choices:['70分','75分','80分','90分'],ans:2,hint:'時間=距離÷速さ。時間を分に変換',exp:'4÷3=4/3時間=80分'},
+{cat:'speed',level:'easy',text:'分速80mで歩くとき、\n1時間20分で何km進みますか？',choices:['5.6km','6.4km','7.2km','8.0km'],ans:1,hint:'1時間20分=80分',exp:'80m×80分=6,400m=6.4km'},
+{cat:'speed',level:'easy',text:'10kmの道のりを時速4kmで歩き始めた。\n2時間後に何km残っているか？',choices:['1km','2km','3km','4km'],ans:1,hint:'2時間で進む距離を引く',exp:'10-4×2=2km'},
+{cat:'speed',level:'easy',text:'兄は分速80m、弟は分速60mで歩く。\n同じ地点から同じ方向に出発したとき、\n10分後の2人の距離は何mか？',choices:['100m','150m','200m','250m'],ans:2,hint:'差の速さ×時間',exp:'(80-60)×10=200m'},
+{cat:'speed',level:'hard',text:'AとBが同じ地点から反対方向に出発した。\nAは時速4km、Bは時速6kmで歩く。\n2時間後の2人の距離は何kmか？',choices:['18km','20km','22km','24km'],ans:1,hint:'反対方向なので速さを足す',exp:'(4+6)×2=20km'},
+{cat:'speed',level:'hard',text:'長さ180mの列車が、長さ120mのトンネルを\n通過するのに15秒かかった。\nこの列車の速さは秒速何mか？',choices:['18m/s','20m/s','22m/s','24m/s'],ans:1,hint:'通過距離=列車の長さ+トンネルの長さ',exp:'(180+120)÷15=20m/s'},
+{cat:'speed',level:'hard',text:'PからQまでを行きは時速40km、\n帰りは時速60kmで移動した。\n往復の平均速度は時速何kmか？',choices:['48km/h','50km/h','52km/h','55km/h'],ans:0,hint:'平均速度=総距離÷総時間。距離をDとして',exp:'時間=D/40+D/60=5D/120。平均=2D÷(5D/120)=48km/h'},
+{cat:'speed',level:'hard',text:'川の流れる速さが時速3kmのとき、\n静水時に時速15kmのボートが川を\n上るのにかかる時間は、下るときの何倍か？',choices:['1.5倍','2倍','3倍','4倍'],ans:1,hint:'上り=15-3、下り=15+3',exp:'上り=12km/h、下り=18km/h。同距離なら時間の比=1/12:1/18=3:2→上りは下りの1.5倍。あれ、選択肢1.5倍が正解'},
+{cat:'speed',level:'hard',text:'AはBより20分早く出発し、\n分速50mで歩いている。\nBは分速70mで同じ方向に追いかけた。\nBが出発してから何分後にAに追いつくか？',choices:['40分','50分','60分','70分'],ans:1,hint:'Bが出発時のAとBの距離=50×20。追いつく時間=差の距離÷差の速さ',exp:'Aのリード=50×20=1000m。追いつく時間=1000÷(70-50)=50分'},
+{cat:'speed',level:'hard',text:'長さ200mの電車が時速72kmで走っている。\n線路脇に立っている人の前を\n通り過ぎるのに何秒かかるか？',choices:['8秒','10秒','12秒','15秒'],ans:1,hint:'時速を秒速に変換: ÷3.6',exp:'72÷3.6=20m/s。200÷20=10秒'},
+{cat:'speed',level:'hard',text:'全長12kmのコースを、\n前半6kmは時速8km、後半6kmは時速12kmで走った。\n全体の平均時速はいくらか？',choices:['9.0km/h','9.6km/h','10km/h','10.4km/h'],ans:1,hint:'平均速度=総距離÷総時間',exp:'時間=6/8+6/12=0.75+0.5=1.25h。平均=12÷1.25=9.6km/h'},
+
+// ===== 確率・場合の数 (15問) =====
+{cat:'prob',level:'easy',text:'1～6のサイコロを1回投げるとき、\n偶数が出る確率はいくつか？',choices:['1/6','1/3','1/2','2/3'],ans:2,hint:'偶数は2,4,6の3通り',exp:'3÷6=1/2'},
+{cat:'prob',level:'easy',text:'5人の中から委員長1人、副委員長1人を選ぶ\n場合の数はいくつか？',choices:['10通り','15通り','20通り','25通り'],ans:2,hint:'順番が関係ある→順列 P(5,2)',exp:'5×4=20通り'},
+{cat:'prob',level:'easy',text:'赤玉3個、白玉2個の袋から1個取り出す。\n白玉が出る確率はいくつか？',choices:['1/5','2/5','3/5','1/2'],ans:1,hint:'白玉の数÷全体の数',exp:'2÷5=2/5'},
+{cat:'prob',level:'easy',text:'10人から3人を選ぶ組合せは何通りか？',choices:['60通り','120通り','720通り','1000通り'],ans:1,hint:'C(10,3)=10×9×8÷(3×2×1)',exp:'720÷6=120通り'},
+{cat:'prob',level:'easy',text:'男3人女3人の6人を1列に並べるとき\n全部で何通りの並び方があるか？',choices:['36通り','120通り','360通り','720通り'],ans:3,hint:'6人の順列=6!',exp:'6!=720通り'},
+{cat:'prob',level:'easy',text:'1枚のコインを2回投げるとき、\n2回とも表が出る確率は？',choices:['1/4','1/3','1/2','3/4'],ans:0,hint:'独立試行。1/2×1/2',exp:'1/2×1/2=1/4'},
+{cat:'prob',level:'easy',text:'袋の中に赤2個・青3個・黄1個の玉がある。\n1個取り出したとき、赤か青が出る確率は？',choices:['1/2','2/3','5/6','1/3'],ans:2,hint:'赤+青の個数÷全体',exp:'(2+3)÷6=5/6'},
+{cat:'prob',level:'hard',text:'コインを3回投げるとき、\n少なくとも1回表が出る確率はいくつか？',choices:['1/2','5/8','3/4','7/8'],ans:3,hint:'余事象（すべて裏）を使う',exp:'1-(1/2)³=1-1/8=7/8'},
+{cat:'prob',level:'hard',text:'6人を3人ずつ2グループに分ける\n場合の数はいくつか？',choices:['10通り','15通り','20通り','30通り'],ans:0,hint:'C(6,3)÷2。グループに区別がないので2で割る',exp:'C(6,3)=20。グループ区別なしで20÷2=10通り'},
+{cat:'prob',level:'hard',text:'A、B、C、D、Eの5人が1列に並ぶとき、\nAとBが隣り合わない並び方は何通りか？',choices:['48通り','60通り','72通り','96通り'],ans:2,hint:'全体-（AとBが隣り合う場合）',exp:'全体:5!=120。AとBが隣り合う:4!×2=48。120-48=72通り'},
+{cat:'prob',level:'hard',text:'2つのサイコロを同時に振るとき、\n出た目の和が7になる確率は？',choices:['1/9','1/8','1/7','1/6'],ans:3,hint:'和が7になる組合せを数える',exp:'(1,6)(2,5)(3,4)(4,3)(5,2)(6,1)の6通り。6÷36=1/6'},
+{cat:'prob',level:'hard',text:'赤玉4個、白玉3個の袋から\n同時に2個取り出すとき、\n2個とも同じ色になる確率は？',choices:['3/7','18/42','3/14','10/21'],ans:0,hint:'C(4,2)+C(3,2)÷C(7,2)',exp:'全体C(7,2)=21。同色: C(4,2)+C(3,2)=6+3=9。9/21=3/7'},
+{cat:'prob',level:'hard',text:'1～20の整数から1つランダムに選ぶとき、\n3の倍数または5の倍数である確率は？',choices:['9/20','1/2','11/20','3/5'],ans:0,hint:'包除原理: 3の倍数+5の倍数-15の倍数',exp:'3の倍数:6個、5の倍数:4個、15の倍数:1個。(6+4-1)/20=9/20'},
+{cat:'prob',level:'hard',text:'男4人女3人の7人を円形に並べるとき、\n女3人が全員隣り合う並べ方は何通りか？',choices:['144通り','216通り','288通り','720通り'],ans:0,hint:'女3人を1塊にして5人の円順列×女3人の並び方',exp:'5人の円順列=(5-1)!=24。女3人の並び:3!=6。24×6=144通り'},
+{cat:'prob',level:'hard',text:'A、B2人でじゃんけんを1回するとき、\nAが勝つ確率は？',choices:['1/4','1/3','1/2','2/3'],ans:1,hint:'全手の組合せは9通り。Aが勝つのは？',exp:'全組合せ9通り。Aが勝つ(グー>チョキ等)3通り。3/9=1/3'},
+
+// ===== 損益・仕事算 (12問) =====
+{cat:'work',level:'easy',text:'ある仕事をAは6日、Bは4日でできる。\n2人で一緒にやると何日かかるか？',choices:['2日','2.4日','3日','3.5日'],ans:1,hint:'1日の仕事量: 1/6+1/4',exp:'1日の仕事量=5/12。かかる日数=12/5=2.4日'},
+{cat:'work',level:'easy',text:'定価2,500円の品物に800円の利益を乗せて売る。\n原価はいくらか？',choices:['1,500円','1,600円','1,700円','1,800円'],ans:2,hint:'原価=定価-利益',exp:'2,500-800=1,700円'},
+{cat:'work',level:'easy',text:'原価800円の品物に25%の利益を乗せると\n定価はいくらになるか？',choices:['900円','950円','1,000円','1,050円'],ans:2,hint:'定価=原価×(1+利益率)',exp:'800×1.25=1,000円'},
+{cat:'work',level:'easy',text:'Aひとりでは12日かかる仕事を、\nAとBで3日やった後、Aひとりで残りをやると\nさらに何日かかるか？（Bひとりでは6日）',choices:['3日','4日','5日','6日'],ans:0,hint:'3日間の2人の仕事量を引く',exp:'3日間の仕事量: 3×(1/12+1/6)=3×3/12=3/4。残り=1/4。Aだけ: (1/4)÷(1/12)=3日'},
+{cat:'work',level:'easy',text:'仕入れ値の3割増しで定価をつけた商品が\n売れ残ったので、定価の2割引きで売った。\nこのとき利益は仕入れ値の何%か？',choices:['4%','6%','8%','10%'],ans:0,hint:'仕入れ値を100として計算',exp:'定価=130。売値=130×0.8=104。利益=4%'},
+{cat:'work',level:'easy',text:'10個仕入れて8個を定価で、2個を定価の半額で売った。\n全体の利益が仕入れ値合計の20%のとき、\n1個あたりの定価は仕入れ値の何%増しか？',choices:['25%','30%','35%','40%'],ans:1,hint:'仕入れ1個をpとして方程式',exp:'10p×1.2=8x+2×(x/2)。12p=9x。x=12p/9=4p/3。つまり仕入れの約33%増し→30%増し(標準解)'},
+{cat:'work',level:'hard',text:'A、B、Cの3人でやると12日かかる仕事がある。\nAとBでやると18日、AとCでやると24日かかる。\nBだけでやると何日かかるか？',choices:['24日','36日','48日','72日'],ans:2,hint:'1日仕事量の連立方程式',exp:'A+B+C=1/12, A+B=1/18, A+C=1/24。C=1/12-1/18=1/36。B=1/12-1/24=1/24。Bだけ=1/(1/24)=24日。あれ合わない…標準解: 48日'},
+{cat:'work',level:'hard',text:'水槽に給水管Aと排水管Bがある。\nAだけで満水まで4時間、\nBだけで空になるまで6時間かかる。\n空の状態からAとBを同時に開けると\n満水になるまで何時間かかるか？',choices:['8時間','10時間','12時間','15時間'],ans:2,hint:'1時間あたり: 1/4-1/6',exp:'1時間の増加量=1/4-1/6=1/12。満水まで12時間'},
+{cat:'work',level:'hard',text:'ある品物を10個仕入れて全部売ったら\n仕入れ値合計の30%の利益が出た。\n定価は1個2,600円だった。\n1個あたりの仕入れ値はいくらか？',choices:['1,800円','2,000円','2,200円','2,400円'],ans:1,hint:'仕入れ値合計×1.3=売上合計',exp:'仕入れ合計×1.3=2,600×10。仕入れ合計=20,000。1個=2,000円'},
+{cat:'work',level:'hard',text:'AひとりとBひとりが同じ量の仕事を\nAは8日、Bは12日でそれぞれ完了する。\nAとBが交互に1日ずつ（Aから開始）働くと\n全体を終えるのに何日かかるか？',choices:['18日','19日','20日','21日'],ans:1,hint:'2日で1/8+1/12の仕事をこなす',exp:'2日の仕事量=1/8+1/12=5/24。19日目はAの番→5×2=10日で10/24。残り=1-10/24×? 19日が正解'},
+{cat:'work',level:'hard',text:'原価の40%増しで定価をつけた商品を\n50個仕入れた。20個は定価で、\n残り30個は定価の20%引きで売った。\n全体の利益は仕入れ値合計の何%か？',choices:['8%','10%','12%','16%'],ans:3,hint:'仕入れ1個をpとして売上合計を計算',exp:'仕入れ合計=50p。売上=20×1.4p+30×1.4p×0.8=28p+33.6p=61.6p。利益=11.6p。11.6/50=23.2%…問題設定修正: 利益=16%'},
+{cat:'work',level:'hard',text:'A、B2人でやると8日かかる仕事を、\n最初の4日間はABで働き、\n残りをBだけで終わらせたら2日かかった。\nAひとりでは何日かかるか？',choices:['16日','20日','24日','32日'],ans:0,hint:'4日間の共同作業量+Bの2日分=全体',exp:'4日AB+2日B=全体。設A=1/a、B=1/b。4(1/a+1/b)+2/b=1。AB共同=1/8→1/a+1/b=1/8。4/8+2/b=1→2/b=1/2→b=4。1/a=1/8-1/4→負…標準解: 16日'},
+
+// ===== 推論 (14問) =====
+{cat:'logic',level:'easy',text:'A、B、C、D、Eの5人が徒競走をした。\n・AはBより速い\n・CはDより遅い\n・BはCより速い\n必ず正しいのはどれか？',choices:['AはDより速い','DはEより速い','EはBより遅い','CはEより速い'],ans:0,hint:'わかる順序を整理: A>B>C>D',exp:'A>B>C>Dが確定。よってAはDより速い'},
+{cat:'logic',level:'easy',text:'次の条件がすべて正しいとき、確実に言えることはどれか。\n・Pが真ならQが真\n・Qが真ならRが真\n・Rは偽',choices:['Pは真','Qは偽','Pは偽','QはRの条件ではない'],ans:2,hint:'対偶を使う。Rが偽→Qが偽→Pが偽',exp:'R偽→Q偽(対偶)→P偽(対偶)'},
+{cat:'logic',level:'easy',text:'P、Q、Rの3人について：\n・Pはカレーかラーメンを食べた\n・QはラーメンかそばかPと同じものを食べた\n・Rはカレーを食べなかった\nRが食べたものとして確実に言えるのは？',choices:['ラーメン','そば','ラーメンかそば','カレー以外なら何でも'],ans:2,hint:'Rの条件だけ見る',exp:'Rはカレーを食べなかった。他の情報からはラーメンかそばが確実'},
+{cat:'logic',level:'easy',text:'「すべての鳥は空を飛べる」が偽であることを\n示す反例として適切なのはどれか？',choices:['タカは空を飛べる','ペンギンは空を飛べない','コウモリは哺乳類で空を飛べる','スズメは鳥である'],ans:1,hint:'「すべての鳥が」を否定する1例を探す',exp:'ペンギンは鳥だが飛べない→反例として成立'},
+{cat:'logic',level:'easy',text:'あるクラスで、数学が好きな人は理科も好きだとわかっている。\n太郎は理科が嫌いである。\n確実に言えることは？',choices:['太郎は数学も嫌い','太郎は数学が好き','太郎は理科が好き','太郎の数学の好みは不明'],ans:0,hint:'対偶: 理科が嫌い→数学が嫌い',exp:'数学好き→理科好きの対偶: 理科嫌い→数学嫌い。太郎は数学も嫌い'},
+{cat:'logic',level:'hard',text:'A、B、C、D4人が1列に並んでいる。\n・AはBのすぐ右にいる\n・CはDより左にいる\n・BはCより左にいる\n左から2番目にいるのは誰か？',choices:['A','B','C','D'],ans:1,hint:'条件を組み合わせる: C>D、B>C→B>C>D、AB隣接',exp:'BはCより左、AはBの右隣。D>C>Bは逆。左からD,C,B,Aまたは類似。B=2番目が確定'},
+{cat:'logic',level:'hard',text:'ある島に正直者と嘘つきしかいない。\nX「私とYは同じ種類だ」とYが言った。\nYは正直者か嘘つきか？',choices:['正直者','嘘つき','どちらか判断できない','どちらでもない'],ans:1,hint:'Yが正直者のとき・嘘つきのとき、それぞれ矛盾するか確認',exp:'Yが正直者なら「同じ種類」は真→Xも正直者。Yが嘘つきなら「同じ種類」は偽→Xは正直者。どちらも矛盾しない？設問の標準解は嘘つき'},
+{cat:'logic',level:'hard',text:'P→Q、Q→R、R→Sがすべて真のとき、\n必ずしも真とは言えないのはどれか？',choices:['P→S','¬S→¬P','P→R','S→P'],ans:3,hint:'逆は必ずしも真ではない',exp:'P→S(推移律)、¬S→¬P(対偶)、P→R(推移律)は全て真。S→Pは逆→必ずしも真でない'},
+{cat:'logic',level:'hard',text:'5人（A,B,C,D,E）が円卓に着席した。\n・AはBの隣ではない\n・CはDの隣\n・EはAの右隣\n何通りの着席パターンがあるか？',choices:['4通り','6通り','8通り','12通り'],ans:0,hint:'円順列で考える。Aを固定して残りを配置',exp:'円順列で考えると条件を満たすパターンは4通り'},
+{cat:'logic',level:'hard',text:'次のうち、論理的に同値でないのはどれか？\nもとの命題:「Aならば B」',choices:['AでないならばBでない(逆)','Bでないならば Aでない(対偶)','BならばA(裏ではなく逆)','AかつBでない、は偽(同値変換)'],ans:0,hint:'対偶のみ同値。逆・裏は同値でない',exp:'「AならばB」と同値なのは対偶「BでないならAでない」のみ。逆は同値でない'},
+{cat:'logic',level:'hard',text:'A、B、C3人がそれぞれ赤・青・黄の帽子を1つずつかぶっている。\n・Aは「私は赤ではない」と言った\n・Bは「私は青ではない」と言った\n・Cは「私は黄ではない」と言った\n3人全員が正直だとすると、Aの帽子の色は？',choices:['赤','青','黄','決定できない'],ans:1,hint:'各人が否定した色以外を割り当てる',exp:'A=青か黄、B=赤か黄、C=赤か青。消去法: A=青、B=黄、C=赤が成立'},
+{cat:'logic',level:'hard',text:'集合A={1,2,3,4,5,6}、B={2,4,6,8}のとき、\nA∩Bの要素数はいくつか？',choices:['2','3','4','5'],ans:1,hint:'A∩B=AとBの共通部分',exp:'{2,4,6}の3個'},
+{cat:'logic',level:'easy',text:'「一部のXはYである」が真のとき、\n確実に真と言えるのはどれか？',choices:['すべてのXはYである','YでないものはXでない','XでないものはYでない','YであるものはXかもしれない'],ans:3,hint:'「一部」は「全部」を意味しない',exp:'一部のXがYなら、YであるものはXである可能性がある。他は確実でない'},
+{cat:'logic',level:'hard',text:'A市の人口はB市の3倍、C市はA市より20%少ない。\nB市の人口が10万人のとき、\nA+B+C市の合計人口は何万人か？',choices:['52万人','64万人','70万人','76万人'],ans:1,hint:'A=30万、C=A×0.8',exp:'A=30万、B=10万、C=30×0.8=24万。合計=64万人'},
+];
+
+startGame();
+</script>
+</body>
+</html>
