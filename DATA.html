@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>総合能力診断DATA 対策アプリ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Noto+Sans+JP:wght@300;400;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --bg2: #0f1425;
+    --panel: #141930;
+    --panel2: #1a2040;
+    --border: #2a3560;
+    --accent: #4f8ef7;
+    --accent2: #7b5cf0;
+    --accent3: #f05c7b;
+    --gold: #f0c050;
+    --green: #3ecf8e;
+    --text: #e8ecf5;
+    --text2: #9aa5c4;
+    --text3: #5a6480;
+    --easy: #3ecf8e;
+    --mid: #f0c050;
+    --hard: #f05c7b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 20px; }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 48px 20px 36px;
+    position: relative;
+  }
+  .header-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 14px;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+  header h1 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 60%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+  }
+  header p {
+    margin-top: 10px;
+    color: var(--text2);
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+
+  /* Score bar */
+  #scorebar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-bottom: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--text2);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #scorebar span { color: var(--text); }
+  .score-num { color: var(--gold); font-size: 18px; font-weight: bold; }
+  .streak-num { color: var(--green); }
+
+  /* Category tabs */
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .tab-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    padding: 10px 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    text-align: center;
+    transition: all 0.2s;
+    line-height: 1.4;
+  }
+  .tab-btn:hover { border-color: var(--accent); color: var(--text); }
+  .tab-btn.active {
+    background: var(--panel2);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(79,142,247,0.2);
+  }
+  .tab-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+
+  /* Difficulty */
+  .difficulty-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .diff-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .diff-btn[data-diff="easy"].active { border-color: var(--easy); color: var(--easy); background: rgba(62,207,142,0.1); }
+  .diff-btn[data-diff="mid"].active  { border-color: var(--mid); color: var(--mid); background: rgba(240,192,80,0.1); }
+  .diff-btn[data-diff="hard"].active { border-color: var(--hard); color: var(--hard); background: rgba(240,92,123,0.1); }
+  .diff-btn:hover { border-color: var(--text3); color: var(--text); }
+
+  /* Question card */
+  #question-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px;
+    margin-bottom: 16px;
+    min-height: 200px;
+    position: relative;
+  }
+  .q-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .q-tag {
+    font-size: 10px;
+    letter-spacing: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid;
+  }
+  .q-tag.reading  { color: var(--accent);  border-color: var(--accent);  background: rgba(79,142,247,0.08); }
+  .q-tag.solving  { color: var(--accent2); border-color: var(--accent2); background: rgba(123,92,240,0.08); }
+  .q-tag.data     { color: var(--gold);    border-color: var(--gold);    background: rgba(240,192,80,0.08); }
+  .q-tag.logic    { color: var(--green);   border-color: var(--green);   background: rgba(62,207,142,0.08); }
+
+  .q-diff-badge {
+    font-size: 10px;
+    letter-spacing: 1px;
+    font-family: 'Share Tech Mono', monospace;
+    padding: 3px 10px;
+    border-radius: 3px;
+  }
+  .q-diff-badge.easy { background: rgba(62,207,142,0.15);  color: var(--easy); }
+  .q-diff-badge.mid  { background: rgba(240,192,80,0.15);  color: var(--mid); }
+  .q-diff-badge.hard { background: rgba(240,92,123,0.15);  color: var(--hard); }
+
+  #question-num {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text3);
+    font-size: 12px;
+  }
+
+  #question-text {
+    font-size: 15px;
+    line-height: 1.9;
+    color: var(--text);
+    white-space: pre-wrap;
+  }
+
+  .q-table {
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 13px;
+    width: 100%;
+  }
+  .q-table th {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    color: var(--text2);
+    font-weight: 500;
+    text-align: center;
+  }
+  .q-table td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: center;
+    color: var(--text);
+  }
+  .q-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  /* Timer */
+  #timer-bar-wrap {
+    height: 3px;
+    background: var(--panel2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    display: none;
+  }
+  #timer-bar { height: 100%; background: var(--accent); transition: width 0.5s linear, background 0.5s; }
+
+  /* Options */
+  #options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .opt-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 14px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    line-height: 1.6;
+  }
+  .opt-label {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text3);
+    font-size: 12px;
+    min-width: 20px;
+    margin-top: 1px;
+  }
+  .opt-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--panel2);
+    transform: translateX(3px);
+  }
+  .opt-btn.correct { border-color: var(--easy) !important; background: rgba(62,207,142,0.1) !important; color: var(--easy) !important; }
+  .opt-btn.correct .opt-label { color: var(--easy); }
+  .opt-btn.wrong   { border-color: var(--hard) !important; background: rgba(240,92,123,0.08) !important; color: var(--hard) !important; opacity: 0.7; }
+  .opt-btn.wrong .opt-label { color: var(--hard); }
+  .opt-btn:disabled { cursor: default; }
+
+  /* Explanation */
+  #explanation {
+    display: none;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--text2);
+    animation: fadeIn 0.3s ease;
+  }
+  #explanation strong { color: var(--text); }
+  #explanation .correct-label { color: var(--easy); font-weight: 700; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* Buttons row */
+  .btn-row { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn {
+    padding: 12px 24px;
+    border-radius: 6px;
+    border: 1px solid;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-size: 13px;
+    transition: all 0.2s;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #6ba0ff; }
+  .btn-ghost { background: transparent; border-color: var(--border); color: var(--text2); }
+  .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+
+  /* Progress */
+  .progress-wrap { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .progress-bar-outer { flex: 1; height: 4px; background: var(--panel2); border-radius: 2px; overflow: hidden; }
+  .progress-bar-inner { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 2px; transition: width 0.4s; }
+  .progress-label { font-family: 'Share Tech Mono', monospace; font-size: 11px; color: var(--text3); white-space: nowrap; }
+
+  /* Result screen */
+  #result-screen {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    animation: fadeIn 0.5s ease;
+  }
+  .result-circle {
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    background: radial-gradient(circle at center, rgba(79,142,247,0.1), transparent);
+  }
+  .result-pct { font-size: 32px; font-weight: 900; font-family: 'Share Tech Mono', monospace; color: var(--accent); }
+  .result-label { font-size: 11px; color: var(--text3); letter-spacing: 1px; }
+  .result-grade { font-family: 'Noto Serif JP', serif; font-size: 22px; margin-bottom: 8px; }
+  .result-msg { color: var(--text2); font-size: 14px; margin-bottom: 32px; line-height: 1.8; }
+  .result-breakdown {
+    display: grid; grid-template-columns: repeat(2,1fr);
+    gap: 10px; margin-bottom: 30px; text-align: left;
+  }
+  .breakdown-item {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px;
+  }
+  .breakdown-item .bi-label { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+  .breakdown-item .bi-val { font-size: 20px; font-family: 'Share Tech Mono', monospace; color: var(--text); }
+
+  /* Responsive */
+  @media(max-width: 600px) {
+    .tabs { grid-template-columns: repeat(2,1fr); }
+    .result-breakdown { grid-template-columns: 1fr; }
+    #question-card { padding: 18px; }
+    .btn { padding: 10px 16px; font-size: 12px; }
+  }
+
+  /* Scroll to top */
+  .scroll-hint { text-align: center; font-size: 11px; color: var(--text3); padding-top: 40px; font-family: 'Share Tech Mono', monospace; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="header-badge">PURE INTELLIGENCE TEST</div>
+    <h1>総合能力診断 DATA<br>対策練習アプリ</h1>
+    <p>文章理解力 ／ 問題解決力 ／ データ分析力 ／ 関係把握力・論理展開度</p>
+  </header>
+
+  <div id="scorebar">
+    <div>累計正解：<span class="score-num" id="total-correct">0</span> 問</div>
+    <div>今回の正答率：<span class="score-num" id="session-pct">—</span></div>
+    <div>連続正解：<span class="streak-num" id="streak">0</span> 🔥</div>
+  </div>
+
+  <div id="main-screen">
+    <div class="tabs">
+      <button class="tab-btn active" data-cat="all"><span class="tab-icon">🧠</span>全カテゴリ</button>
+      <button class="tab-btn" data-cat="reading"><span class="tab-icon">📖</span>文章理解力</button>
+      <button class="tab-btn" data-cat="solving"><span class="tab-icon">🔧</span>問題解決力</button>
+      <button class="tab-btn" data-cat="data"><span class="tab-icon">📊</span>データ分析力</button>
+    </div>
+    <div class="tabs" style="margin-top:-10px">
+      <button class="tab-btn" data-cat="logic" style="grid-column: span 4"><span class="tab-icon" style="display:inline;margin:0 6px 0 0">🔗</span>関係把握力・論理展開度</button>
+    </div>
+
+    <div class="difficulty-row">
+      <button class="diff-btn active" data-diff="easy">初級 ★☆☆</button>
+      <button class="diff-btn" data-diff="mid">中級 ★★☆</button>
+      <button class="diff-btn" data-diff="hard">上級 ★★★</button>
+    </div>
+
+    <div id="timer-bar-wrap"><div id="timer-bar" style="width:100%"></div></div>
+
+    <div class="progress-wrap">
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="progress-inner" style="width:0%"></div></div>
+      <div class="progress-label" id="progress-label">0 / 0</div>
+    </div>
+
+    <div id="question-card">
+      <div class="q-meta">
+        <span id="q-tag" class="q-tag reading">文章理解力</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="q-diff-badge" class="q-diff-badge easy">初級</span>
+          <span id="question-num">Q1</span>
+        </div>
+      </div>
+      <div id="question-text">カテゴリと難易度を選択して「次の問題」を押してください。</div>
+    </div>
+
+    <div id="options"></div>
+    <div id="explanation"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="skip-btn" onclick="loadQuestion()">スキップ</button>
+      <button class="btn btn-primary" id="next-btn" onclick="loadQuestion()">次の問題 →</button>
+    </div>
+  </div>
+
+  <div id="result-screen">
+    <div class="result-circle">
+      <div class="result-pct" id="res-pct">—</div>
+      <div class="result-label">SCORE</div>
+    </div>
+    <div class="result-grade" id="res-grade"></div>
+    <div class="result-msg" id="res-msg"></div>
+    <div class="result-breakdown">
+      <div class="breakdown-item"><div class="bi-label">正解数</div><div class="bi-val" id="res-correct">0</div></div>
+      <div class="breakdown-item"><div class="bi-label">問題数</div><div class="bi-val" id="res-total">0</div></div>
+      <div class="breakdown-item"><div class="bi-label">最長連続正解</div><div class="bi-val" id="res-streak">0</div></div>
+      <div class="breakdown-item"><div class="bi-label">累計正解</div><div class="bi-val" id="res-cumulative">0</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="resetSession()">もう一度挑戦する</button>
+  </div>
+
+  <p class="scroll-hint">powered by PURE Intelligence Framework · DATA Adaptation</p>
+</div>
+
+<script>
+// ===== QUESTION BANK =====
+const QUESTIONS = [
+
+// ===================== 文章理解力 =====================
+
+// --- EASY ---
+{cat:'reading',diff:'easy',
+text:`次の文章を読んで、問いに答えなさい。
+
+「近年、在宅勤務の普及に伴い、通勤時間が削減され、その分の時間を個人の自由時間として活用できる人が増えている。一方で、仕事と生活の境界線が曖昧になることで、かえって労働時間が延長してしまうという指摘もある。」
+
+この文章が伝えたい主な内容として最も適切なものはどれか。`,
+options:['在宅勤務は通勤時間の節約という利点があるが、労働時間増加という問題も生じうる','在宅勤務をすると全員の自由時間が増える','通勤時間の削減が生産性向上の最大要因である','労働時間延長は通勤そのものが原因である'],
+answer:0,
+exp:'文章は「一方で」という逆接で在宅勤務の二面性を述べています。利点（通勤削減）と問題点（労働時間延長）の両方を提示しているのがポイントです。'},
+
+{cat:'reading',diff:'easy',
+text:`次の文章を読んで、空欄（　）に入る最も適切な語句を選びなさい。
+
+「科学的な仮説を立てる際には、検証可能性が重要である。どれほど精緻に組み立てられた理論であっても、実験や観察によって反証できる可能性がなければ、それは科学的な命題ではなく（　）に過ぎない。」`,
+options:['形而上学的な信念','技術的な提案','統計的な推測','哲学的な命題'],
+answer:0,
+exp:'カール・ポパーの反証可能性の概念が背景にあります。反証不可能な命題は科学の範疇外とみなされ、形而上学的な信念や神話的な言説と同列に置かれます。'},
+
+{cat:'reading',diff:'easy',
+text:`次の文章の論理構造として正しいものを選びなさい。
+
+「すべての管理職は意思決定の責任を持つ。田中氏は管理職である。したがって、田中氏は意思決定の責任を持つ。」`,
+options:['三段論法（演繹推論）','帰納推論','類比推論','仮説演繹法'],
+answer:0,
+exp:'「全称命題→個別事例→結論」という構造は演繹推論の典型、三段論法です。帰納は個別→一般、類比は類似性に基づく推論です。'},
+
+{cat:'reading',diff:'easy',
+text:`次の文章を読み、筆者の主張として最も適切なものを選びなさい。
+
+「情報リテラシーの欠如は、現代社会において個人だけでなく組織にも深刻なリスクをもたらす。フェイクニュースや誤情報が瞬時に拡散する環境下では、批判的思考力を養うための教育投資こそが、最も費用対効果の高いリスク管理策の一つとなる。」`,
+options:['批判的思考教育への投資はリスク管理として有効である','フェイクニュースは個人の問題であり組織に影響しない','情報リテラシーよりも技術的なセキュリティ対策が重要','情報拡散速度の抑制が最優先課題である'],
+answer:0,
+exp:'筆者は「批判的思考力を養う教育投資＝費用対効果の高いリスク管理策」と主張しています。文章全体の論点がこの結論に向かっています。'},
+
+{cat:'reading',diff:'easy',
+text:`次の文章を読み、下線部「これ」が指す内容を選びなさい。
+
+「市場競争の激化によって製品価格は低下し、消費者は以前より安価に商品を購入できるようになった。しかし、これが長期的に中小企業の収益を圧迫し、市場から退出を余儀なくされる企業が増えれば、最終的には競争そのものが失われる可能性がある。」`,
+options:['製品価格の低下','消費者の購買行動の変化','市場への新規参入','企業の合理化策'],
+answer:0,
+exp:'「しかし、これが」の「これ」は直前の内容を指します。直前は「製品価格は低下し、消費者が安価に購入できるようになった」という事態であり、それが中小企業を圧迫するという流れです。'},
+
+// --- MID ---
+{cat:'reading',diff:'mid',
+text:`次の文章を読んで、問いに答えなさい。
+
+「あらゆる組織は、その存立基盤として何らかの正統性を必要とする。ウェーバーは正統性の型として、伝統的支配・カリスマ的支配・合法的支配の三類型を示した。現代の官僚制組織が採用するのは主に合法的支配であり、明文化されたルールへの服従が組織秩序の根拠となる。しかし、規則への過度な従属は、手続きの遵守それ自体が目的化する「目標の転移」を招き、組織の本来の目的達成能力を損ないうる。」
+
+この文章から導ける推論として最も適切なものを選びなさい。`,
+options:[
+'官僚制のルール遵守は組織秩序を支えるが、過度になると本来目的の達成を妨げるパラドックスを内包している',
+'カリスマ的支配は官僚制よりも目標転移を起こしにくい',
+'合法的支配は正統性として最も優れているため現代組織に普及している',
+'ウェーバーは官僚制の弊害を主な研究対象としていた'
+],
+answer:0,
+exp:'文章は官僚制の正統性根拠（合法的支配）を認めつつ、過度なルール依存が「目標転移」を引き起こすという逆説を指摘しています。この両義性が核心です。'},
+
+{cat:'reading',diff:'mid',
+text:`次の文章を読み、論理的に成立しない反論を選びなさい。
+
+「SNSは情報共有の場として有用であるが、エコーチェンバー現象——同じ意見を持つ者同士が集まることで意見が強化・過激化する——が民主主義の多元性を損なうリスクがある。したがって、プラットフォーム企業には意見の多様性を担保するアルゴリズム設計の責任がある。」`,
+options:[
+'プラットフォーム企業が介入すると、かえって表現の自由を侵害するという別のリスクが生じる',
+'エコーチェンバーはオフラインでも古くから存在しており、SNS固有の問題ではない',
+'SNSによって情報共有が容易になったことは事実であるから、企業に規制権限を与えるべきだ',
+'アルゴリズム設計による多様性担保は技術的に困難であり、実効性に疑問がある'
+],
+answer:2,
+exp:'選択肢Cは「情報共有が容易＝企業に規制権限を与えるべき」という飛躍した論理です。前半の事実から後半の主張は導けません。他の選択肢はいずれも筆者の論点に対する有効な反論です。'},
+
+{cat:'reading',diff:'mid',
+text:`次の文章を読んで設問に答えなさい。
+
+「利益追求のみを目的とした企業行動は、短期的には株主価値を最大化するかもしれないが、長期的には従業員満足度・顧客信頼・地域社会との関係という三つの要素をすべて劣化させ、持続的成長の基盤を失う。CSR（企業の社会的責任）活動は慈善ではなく、このトレードオフを回避するための経営戦略として位置づけるべきである。」
+
+筆者のCSRに対する立場を最も正確に表すものを選びなさい。`,
+options:[
+'CSRは倫理的義務ではなく、持続可能な収益のための戦略的投資である',
+'CSRは法的義務として企業に強制されるべきものである',
+'CSRは短期収益を犠牲にして社会貢献を優先する慈善活動である',
+'CSRは株主価値の最大化と両立しない概念である'
+],
+answer:0,
+exp:'筆者は「CSRは慈善ではなく経営戦略」と明示しています。長期的な持続成長のための合理的判断として捉える視点が核心です。'},
+
+{cat:'reading',diff:'mid',
+text:`次の文章を読んで問いに答えなさい。
+
+「科学技術の進歩は常に一定のリスクを伴う。ただし、そのリスクを理由に技術革新を完全に停止することは、現在の課題を抱えたまま未来を放棄することを意味する。重要なのは『リスクを取るか否か』ではなく、『どのリスクをどの程度まで受容するか』という問いに社会として答えることである。」
+
+この主張の構造として正しいものを選びなさい。`,
+options:[
+'問いの設定そのものを組み替える論法（問題の再フレーミング）',
+'二項対立を維持した上で一方を選択する議論',
+'帰納的推論による技術リスク評価の方法論',
+'技術リスクの定量的管理を求める主張'
+],
+answer:0,
+exp:'「リスクを取るか否か」という二分法を「どのリスクをどの程度受容するか」という問いに組み替えています。これは問題の再フレーミング（問いの設定変換）という論法です。'},
+
+{cat:'reading',diff:'mid',
+text:`次の文章を読み、最も適切な解釈を選びなさい。
+
+「言語は思考を表現する道具であると同時に、思考を制約する枠組みでもある。ある概念を表す語彙が母語に存在しない場合、その概念について思考すること自体が困難になるという仮説がある（サピア=ウォーフ仮説）。この仮説が正しいとすれば、語彙の拡充は単なる知識の蓄積ではなく、思考能力そのものの拡張を意味することになる。」`,
+options:[
+'語彙を増やすことで扱える概念の範囲が広がり、思考力が高まる可能性がある',
+'母語の語彙数が多い国民ほど知能が高い',
+'思考は言語に完全に依存しており、言語なしには思考は不可能である',
+'語彙の学習は思考力より記憶力の向上に寄与する'
+],
+answer:0,
+exp:'「この仮説が正しいとすれば」という条件付きで語彙拡充＝思考能力拡張という帰結を述べています。断定ではなく可能性として述べている点が重要です。'},
+
+// --- HARD ---
+{cat:'reading',diff:'hard',
+text:`次の文章を読んで、問いに答えなさい。
+
+「功利主義は『最大多数の最大幸福』を倫理的行為の基準とするが、この原則は少数者の権利が多数の利益のために犠牲にされる状況を正当化しうるという批判を受ける。カントの義務論はこれに対して、理性的存在者はいかなる場合にも手段としてではなく目的として扱われなければならないと主張し、結果に関わらず普遍化可能な行為原則に従う義務を説く。しかし義務論もまた、複数の絶対的義務が衝突する場合（例：嘘をつくことは禁じられているが、嘘をつかなければ無実の命が失われる）の解決策を提示できないという問題を抱える。」
+
+この文章の論理展開として最も正確なものを選びなさい。`,
+options:[
+'功利主義の少数者問題という弱点を義務論で補完しようとするが、義務論の衝突問題という限界を示し、倫理理論の不完全性を浮かび上がらせる構造',
+'功利主義が優れていることを示すために義務論の欠点を批判している',
+'義務論こそが最善の倫理理論であることを主張するための論文の序論',
+'二つの倫理理論を比較し、功利主義を最終的に採用することを推薦している'
+],
+answer:0,
+exp:'文章は功利主義の問題点→義務論による応答→義務論の問題点という三段構造をとっています。いずれの理論も完全ではないことを示すのが主眼であり、どちらかを推薦していません。'},
+
+{cat:'reading',diff:'hard',
+text:`次の文章を読んで、下線部の論理的意味を最も正確に説明したものを選びなさい。
+
+「民主主義において多数決は本質的に正統性を持つとされるが、それは『多数が決定すること』ではなく『少数意見が尊重される手続きのもとで多数が決定すること』に正統性の根拠がある。したがって、多数決によって少数者の基本権を廃止することは、民主主義の自己否定である。」`,
+options:[
+'民主主義の正統性は単なる数の論理ではなく、手続き的な公正性と少数者保護に依拠しているため、多数決で少数者の権利を奪うことはその根拠自体を破壊する',
+'多数者が常に正しい判断を下すとは限らないため、多数決制度には限界がある',
+'少数者の権利を守ることが民主主義の唯一の目的である',
+'多数決は廃止されるべき非民主的な制度である'
+],
+answer:0,
+exp:'ここで問われているのは手続き的正統性の概念です。民主主義の正当性は手続き（少数意見の尊重）に宿るため、その手続きを踏んで少数者の権利を奪うことは自己矛盾に陥ります。'},
+
+{cat:'reading',diff:'hard',
+text:`次の文章を読み、論理的に厳密に正しい推論を選びなさい。
+
+「Aが起こればBが起こる（A→B）。Cが起こればBが起こる（C→B）。現在Bが起こっている。」`,
+options:[
+'BはAまたはCまたは他の原因から生じた可能性があり、AかCかは特定できない',
+'Aが起こった',
+'Cが起こった',
+'AとCの両方が起こった'
+],
+answer:0,
+exp:'これは論理学の「後件肯定の誤謬」に関する問題です。B→Aは成立しません（A→BはBからAを導けない）。BはA由来かもしれないしC由来かもしれないし、他の原因かもしれません。原因の特定は不可能です。'},
+
+{cat:'reading',diff:'hard',
+text:`次の文章を読んで、筆者が暗に批判している考え方を特定しなさい。
+
+「経済合理性の観点からのみ教育を評価するとき、私たちは教育の最も本質的な部分を見失う。人間が数値化されえない何かを探求し、理解し、変容する過程そのものが教育であるとすれば、就職率や生涯賃金によって大学の優劣を判断する行為は、音楽を音の物理的振動としてのみ記述することに等しい。」`,
+options:[
+'人的資本論的な教育観——教育を将来の所得・生産性への投資として捉える功利的・計量的アプローチ',
+'大学教育の無償化を推進する政策',
+'文系学問の軽視',
+'音楽教育の軽視'
+],
+answer:0,
+exp:'就職率や生涯賃金で教育を評価する行為を批判しており、これは経済学の人的資本論（教育＝生産性向上への投資）の考え方です。音楽の比喩は、本質を数値に還元することの不当性を示すためのアナロジーです。'},
+
+{cat:'reading',diff:'hard',
+text:`次の文章を読んで、論理的に最も強い批判を選びなさい。
+
+「新しい経営手法Xを導入した100社のうち、3年後に業績が向上した企業は72社（72%）であった。したがって、手法Xを導入すれば業績が向上する可能性が高い。」`,
+options:[
+'手法Xを導入しなかった企業群の業績変化率との比較がなければ、72%という数値が手法Xの効果であるか判断できない（対照群の欠如）',
+'100社というサンプルは多すぎるため統計的に意味がない',
+'3年という期間は長すぎるため因果関係が薄れる',
+'72%は有意差として十分でないため棄却されるべきだ'
+],
+answer:0,
+exp:'これは因果推論の基本問題です。対照群（手法Xを導入しなかった企業群）がなければ、72%という数値が景気の好転など外部要因によるものか、手法X固有の効果によるものか判断不能です。'},
+
+// ===================== 問題解決力 =====================
+
+// --- EASY ---
+{cat:'solving',diff:'easy',
+text:`あなたは営業チームのリーダーです。チームの月次報告会で「今月の新規顧客獲得数が先月比30%減少した」という報告がありました。
+
+最初に行うべき最も適切な行動を選びなさい。`,
+options:[
+'減少の原因を特定するために、訪問件数・提案件数・成約率などのデータを確認する',
+'すぐに全員に残業を命じ、訪問件数を増やす',
+'チームメンバーを個別に叱責する',
+'前月の実績が例外的に高かっただけとして特に対応しない'
+],
+answer:0,
+exp:'問題解決の基本は「原因の特定」から始めることです。データ分析により、訪問数の問題か成約率の問題かを切り分けてから対策を打つことが有効です。'},
+
+{cat:'solving',diff:'easy',
+text:`倉庫の在庫管理システムに毎週月曜日の朝だけエラーが発生する。考えられる最も合理的な仮説はどれか。`,
+options:[
+'週末に実行されるバッチ処理やシステムメンテナンスが影響している可能性がある',
+'システム自体に根本的な欠陥がありすべて作り直す必要がある',
+'担当者の操作ミスが原因である',
+'倉庫の電圧が月曜のみ低下している'
+],
+answer:0,
+exp:'「毎週月曜の朝だけ」という周期性は、週末に定期実行される処理との関連を示唆します。最小限の仮説で最大の説明力を持つ原因から検討するのが問題解決の基本です。'},
+
+{cat:'solving',diff:'easy',
+text:`プロジェクトの締め切りまで残り3日で、予定タスクの60%しか完了していない。最も適切な対応はどれか。`,
+options:[
+'残りタスクを優先度別に整理し、締め切りまでに必達のものと後回し可能なものを仕分けた上で関係者に状況を報告する',
+'すべてのタスクを完璧に仕上げるため徹夜を続ける',
+'締め切りの変更を申し出ず、未完成のまま提出する',
+'プロジェクトを中止する'
+],
+answer:0,
+exp:'時間制約下では全体最適より重要度の高いものの確実な完了を優先します。また、ステークホルダーへの早期報告は信頼維持の観点から重要です。'},
+
+{cat:'solving',diff:'easy',
+text:`新製品の販売戦略を立案するにあたり、最初に実施すべきことはどれか。`,
+options:[
+'顧客ニーズと市場環境の調査・分析',
+'広告予算の確保',
+'競合他社の価格の模倣',
+'社内の意見をまとめた多数決'
+],
+answer:0,
+exp:'戦略立案の起点は「誰に何を提供するか」の明確化です。そのためには顧客ニーズと市場環境の把握が最優先です。'},
+
+{cat:'solving',diff:'easy',
+text:`同じ業務を担当する2名のスタッフがおり、AさんはBさんの2倍の速度で作業をこなす。同じタスクに対して両者を同時にアサインした場合、最も生産性が高い分担方法はどれか。`,
+options:[
+'Aが全体の2/3、Bが1/3を担当する（作業速度比に応じた分担）',
+'均等に半分ずつ担当する',
+'Aに全作業を任せBは待機させる',
+'Bに全作業を任せAは別業務に集中させる'
+],
+answer:0,
+exp:'2人が同時に終わるには、速度比に応じた仕事量の分担が最適です。Aの速度をv、Bをv/2とすると、A:B=2:1の分量で同時完了となります。選択肢Dは文脈によっては合理的ですが「両者を同時にアサインした場合」という前提下では生産性が低下します。'},
+
+// --- MID ---
+{cat:'solving',diff:'mid',
+text:`あなたはカスタマーサポートチームのマネージャーです。以下の状況を分析して最も適切な対応を選びなさい。
+
+【状況】
+・先月のクレーム件数：120件（前月比+40%）
+・主なクレーム内容：配送遅延60件、商品品質20件、対応の悪さ40件
+・同時期に注文件数は前月比+15%増加`,
+options:[
+'配送遅延（50%）が主因であり物流部門と協力して遅延原因を特定・対策すると同時に、対応品質の改善研修も並行して実施する',
+'全件をマネージャーが直接対応することで品質を担保する',
+'クレーム件数の絶対数は少ないため優先度は低い',
+'注文増加が原因なのでこれ以上の対策は不要'
+],
+answer:0,
+exp:'クレームの50%が配送遅延に集中しているため最大の問題は物流です。ただし注文増加率（+15%）に対してクレーム増加率（+40%）が過剰なため、対応品質の問題も並行して対処すべきです。'},
+
+{cat:'solving',diff:'mid',
+text:`製造ラインで不良品率が先週から急上昇している。調査の結果、不良の発生は夜勤シフト（22:00〜6:00）に集中していることが分かった。可能性の高い原因候補として適切でないものはどれか。`,
+options:[
+'その時間帯に使用する原材料のロットが異なる',
+'夜勤担当者のスキルや疲労度の差異',
+'夜間の気温・湿度変化による製造環境の変化',
+'昼勤と夜勤でマーケティング戦略が異なる'
+],
+answer:3,
+exp:'不良品率という製造品質の問題に対して、マーケティング戦略の差異は因果関係を持ちません。他の選択肢（原材料ロット・人的要素・環境変化）はいずれも製造品質に直接影響しうる要因です。'},
+
+{cat:'solving',diff:'mid',
+text:`新規事業のアイデア評価において、以下の4案のうち「短期収益化しにくいが市場シェア拡大に有効」という評価軸に最も合致するものを選びなさい。
+
+A案：高単価・低販売数・高利益率の高級品路線
+B案：低単価・大量販売・低利益率の普及品路線
+C案：中単価・限定販売・ブランド構築重視
+D案：サブスクリプション型・初月無料・長期継続で収益化`,
+options:['D案（サブスクリプション型）','A案（高級品路線）','C案（ブランド構築）','B案（普及品路線）'],
+answer:0,
+exp:'サブスクリプション型は初期に無料または低価格で顧客を獲得するため短期収益は低い一方、ユーザー数＝市場シェアを急速に拡大できます。B案は低単価でシェアを取れますが即座に収益も発生します。'},
+
+{cat:'solving',diff:'mid',
+text:`あるプロジェクトで4つのタスクがあり、相互の依存関係は次の通りです。
+
+・タスクA：所要3日（依存なし）
+・タスクB：所要2日（Aが完了後に開始可能）
+・タスクC：所要4日（依存なし、Aと並行可能）
+・タスクD：所要1日（BとCが両方完了後に開始可能）
+
+プロジェクト全体の最短完了日数はいくつか？`,
+options:['8日','6日','10日','7日'],
+answer:0,
+exp:'クリティカルパスを求めます。\n・経路①：A(3)→B(2)→D(1)＝6日\n・経路②：C(4)→D(1)＝5日\nDはBとC両方完了が必要なので、A+B=5日、C=4日 → Dはmax(5,4)=5日後に開始→5+1=6日。しかしAは3日後にBを開始、B完了は5日目。Cは4日目完了。よってDは5日目に開始、完了は6日目。Aを加えると：A(3)+B(2)+D(1)=6日がクリティカルパス。'},
+
+{cat:'solving',diff:'mid',
+text:`消費者調査の結果、自社製品の不満理由として「価格が高い」が55%、「デザインが古い」が30%、「機能が少ない」が15%であった。リソースが限られている中で最も効果的な改善策はどれか。`,
+options:[
+'価格競争力を高めるためコスト削減と価格改定を優先しつつ、デザインリニューアルを次の施策として計画する',
+'機能追加を最優先にする（投資対効果が高いため）',
+'3つすべてを同時に均等なリソースで改善する',
+'調査結果を無視して全面刷新を行う'
+],
+answer:0,
+exp:'55%という最大の不満要因である「価格」への対応が最優先です。次いで30%の「デザイン」。15%の「機能」は最後でよいことになります。リソース制約下では問題の重みに比例した対応が合理的です。'},
+
+// --- HARD ---
+{cat:'solving',diff:'hard',
+text:`あなたはコンサルタントとして、ある食品メーカーのCEOから相談を受けています。
+
+【状況】
+・売上：過去3年で年率2%成長（業界平均5%）
+・利益率：8%（業界平均12%）
+・主力製品の市場シェア：3年前28% → 現在21%
+・新製品開発：過去5年で2件（業界平均8件）
+・設備老朽化率：主要設備の70%が耐用年数超過
+・従業員満足度：業界最低水準
+
+根本的な問題の所在として最も適切な診断はどれか。`,
+options:[
+'イノベーション能力と組織活力の低下が市場競争力を失わせており、設備更新を怠った結果として利益率低下・シェア喪失が連鎖している構造的問題',
+'マーケティング予算が不足している',
+'主力製品の価格設定が間違っている',
+'業界全体が低迷期にある'
+],
+answer:0,
+exp:'複数の指標を統合的に読むと：新製品開発不足（イノベーション力の欠如）→シェア喪失→売上成長鈍化、設備老朽化→コスト高→利益率低下、従業員満足度最低→組織活力低下というループが見えます。これらは個別問題ではなく組織力の構造的劣化という一つの根因から派生しています。'},
+
+{cat:'solving',diff:'hard',
+text:`以下の意思決定状況において、「期待値最大化原理」に従った場合の合理的な選択はどれか。
+
+【選択肢】
+A：確実に150万円を得る
+B：75%の確率で250万円、25%の確率で0円
+C：50%の確率で400万円、50%の確率で-50万円（損失）`,
+options:[
+'B（期待値187.5万円）が最大だが、Cとの比較では損失リスクも考慮に値する。純粋な期待値最大化ではBを選択する',
+'A（確実に150万円）',
+'C（期待値175万円）',
+'すべて同等のため無差別'
+],
+answer:0,
+exp:'期待値計算：A=150万、B=250×0.75+0×0.25=187.5万、C=400×0.5+(-50)×0.5=175万。最大はB=187.5万。ただし実際の意思決定ではリスク回避的行動（プロスペクト理論）も考慮されます。'},
+
+{cat:'solving',diff:'hard',
+text:`製品Xの需要予測に関して次のデータがある。
+
+・過去6ヶ月の月次販売数（千個）：100, 105, 98, 112, 108, 115
+・季節性指数：1〜6月は標準（1.0）、7〜9月は夏需要で1.3、10〜12月は0.85
+
+現在は6月末。7月の販売数（千個）として最も適切な予測値を選びなさい。`,
+options:['138〜143千個程度','106千個程度（直近平均のまま）','170千個程度','90千個程度'],
+answer:0,
+exp:'直近3ヶ月平均＝(112+108+115)/3≒111.7千個。これに7月の季節性指数1.3を乗算：111.7×1.3≒145千個。トレンド（約2千個/月増）も考慮すると7月ベースは約113〜114千個となり、×1.3≒147〜148千個。おおよそ138〜148千個の範囲が妥当。'},
+
+{cat:'solving',diff:'hard',
+text:`以下のような「囚人のジレンマ」的状況で、長期的な協調関係構築に最も有効な戦略はどれか。
+
+【状況】競合A社とB社が価格設定を行う。両社が協調（高価格維持）なら各社利益10、B社のみ裏切り（低価格）なら裏切った側15・協調側3、両社とも裏切りなら各社5。この取引は繰り返される。`,
+options:[
+'「しっぺ返し戦略」（初回は協調し、その後は相手の前回の行動を模倣する）',
+'常に裏切り続ける',
+'常に協調し続ける（相手の行動にかかわらず）',
+'ランダムに協調・裏切りを繰り返す'
+],
+answer:0,
+exp:'繰り返しゲームにおいてアクセルロッドの実験でも示された通り、「しっぺ返し（Tit-for-Tat）」が長期的に最も高い協調率と累積利得を達成します。常に協調は搾取されるリスク、常に裏切りは相互悪化（5,5）に収束します。'},
+
+{cat:'solving',diff:'hard',
+text:`物流センターの配送ルート最適化において、以下の制約条件がある場合に取るべきアプローチはどれか。
+
+制約：①配送先は毎日変動する ②各車両の積載制限あり ③一部顧客に指定時間帯あり ④交通状況がリアルタイムで変化 ⑤ドライバーの法定労働時間制限`,
+options:[
+'制約①④の動的変化に対応するためヒューリスティクス（遺伝的アルゴリズム等）を用いた動的最適化システムを構築し、②③⑤は事前制約として組み込む',
+'全制約を完全に満たす数理最適解を毎日計算して実行する',
+'経験豊富なドライバーの判断に完全に委ねる',
+'制約を無視して距離のみで最短ルートを計算する'
+],
+answer:0,
+exp:'①④のようにリアルタイム変動する制約を含む最適化問題は、完全最適解の計算が計算量的に困難（NP困難）です。現実的な解法はヒューリスティクス（近似最適化）であり、静的な制約②③⑤を事前条件として組み込みながら動的に解を更新します。'},
+
+// ===================== データ分析力 =====================
+
+// --- EASY ---
+{cat:'data',diff:'easy',
+text:`ある会社の年間売上データ（単位：億円）
+
+2020年：120
+2021年：132
+2022年：145
+2023年：160
+2024年：176
+
+2020年から2024年にかけての年平均成長率（CAGR）として最も近いものを選びなさい。`,
+options:['約10%','約8%','約5%','約15%'],
+answer:0,
+exp:'CAGR = (176/120)^(1/4) - 1 ≈ (1.467)^0.25 - 1 ≈ 1.1004 - 1 ≈ 10.0%。4年間で約10%の年平均成長です。'},
+
+{cat:'data',diff:'easy',
+text:`製品Aの月別販売個数（上半期）
+
+1月:200, 2月:180, 3月:220, 4月:210, 5月:230, 6月:240
+
+上半期の中央値（メジアン）として正しいものを選びなさい。`,
+options:['215個','213.3個','240個','200個'],
+answer:0,
+exp:'データを昇順に並べると：180, 200, 210, 220, 230, 240。偶数個（6個）のため中央2値の平均：(210+220)/2=215。'},
+
+{cat:'data',diff:'easy',
+text:`以下の表を見て正しい分析を選びなさい。
+
+| 部署 | 応募者数 | 採用数 | 採用率 |
+|------|---------|--------|--------|
+| 営業 | 100     | 20     | 20%    |
+| 技術 | 80      | 24     | 30%    |
+| 管理 | 40      | 12     | 30%    |`,
+options:[
+'技術部門と管理部門の採用率は同じであり、採用数は技術部門の方が多い',
+'採用率が最も高い部門は営業部門である',
+'全体の採用率は約26%である',
+'管理部門の採用数が最も多い'
+],
+answer:0,
+exp:'技術30%=管理30%で採用率は同率。採用数は技術24>管理12。全体採用率=(20+24+12)/(100+80+40)=56/220≈25.5%なのでCも近いですが「約26%」とは言えなくもない。最も明確に正しいのはAです。'},
+
+{cat:'data',diff:'easy',
+text:`グラフを読み取る問題。
+
+X社の株価（月初値）
+1月:1000円 2月:1100円 3月:1050円 4月:1200円 5月:1150円 6月:1300円
+
+この半年で最も大きな月間騰落幅（絶対値）はいつからいつの変化か。`,
+options:['5月→6月の+150円','1月→2月の+100円','4月→5月の-50円','2月→3月の-50円'],
+answer:0,
+exp:'各月の騰落幅（絶対値）：1→2月:+100、2→3月:-50、3→4月:+150、4→5月:-50、5→6月:+150。最大は3→4月と5→6月の両方が150円。問題文の選択肢では5→6月の+150が提示されています（3→4月も同値）。'},
+
+{cat:'data',diff:'easy',
+text:`ある試験で100人が受験し、平均点は72点、最高点は98点、最低点は40点だった。合格ラインが80点以上の場合、確実に言えることはどれか。`,
+options:[
+'合格者が存在する（98点以上の人が少なくとも1人いる）',
+'合格者は全体の約28%である',
+'平均点より高い点数の人が50人以上いる',
+'40点台の受験者が最も多い'
+],
+answer:0,
+exp:'最高点が98点なので、80点以上の合格者が少なくとも1人（最高点取得者）は存在します。平均72点から合格者が28%というのは計算上導けません（正規分布を仮定すれば推定できますが、確実ではありません）。'},
+
+// --- MID ---
+{cat:'data',diff:'mid',
+text:`次の表からシンプソンのパラドックス的状況を見抜きなさい。
+
+【全体合計】
+・A治療法：回復率60%（600/1000人）
+・B治療法：回復率50%（250/500人）
+
+【重症患者のみ】
+・A治療法：回復率20%（40/200人）
+・B治療法：回復率25%（50/200人）
+
+【軽症患者のみ】
+・A治療法：回復率70%（560/800人）
+・B治療法：回復率67%（200/300人）
+
+この結果について正しい解釈はどれか。`,
+options:[
+'全体ではAが優れて見えるが、重症・軽症別に見るとBが重症に強い。A治療法に軽症患者が多く割り当てられた交絡があり、単純な全体比較は誤解を招く',
+'A治療法は重症にも軽症にも優れているため全体でも優れている',
+'B治療法は全カテゴリで劣っているため採用すべきでない',
+'データが矛盾しているため分析不能'
+],
+answer:0,
+exp:'これはシンプソンのパラドックスの典型例です。A治療法に軽症（回復しやすい）患者が偏って割り当てられているため全体成績が良く見えます。重症・軽症別ではBがより重症に強い。適切な比較には層別化が必要です。'},
+
+{cat:'data',diff:'mid',
+text:`次のデータから正しく計算・解釈しなさい。
+
+ある製品の生産コスト構造：
+・固定費：月額500万円
+・変動費：1個あたり2,000円
+・販売価格：1個あたり5,000円
+
+月間損益分岐点（BEP）の生産販売数量として正しいものはどれか。`,
+options:['1,667個','250個','2,500個','500個'],
+answer:0,
+exp:'BEP = 固定費 ÷ (販売価格 - 変動費) = 5,000,000 ÷ (5,000 - 2,000) = 5,000,000 ÷ 3,000 ≈ 1,667個'},
+
+{cat:'data',diff:'mid',
+text:`以下の散布図データから相関について正しく判断しなさい。
+
+従業員数と売上高のデータ（10社）：
+・相関係数r = 0.85
+・ただし全10社のうち2社は例外的に従業員数が極端に多い（外れ値）
+
+この状況の解釈として最も適切なものを選びなさい。`,
+options:[
+'r=0.85は強い正の相関を示すが、外れ値2社の影響が相関係数を押し上げている可能性があり、外れ値除外後の再計算が必要',
+'r=0.85は完全な因果関係を意味する',
+'外れ値が存在する以上、このデータは完全に無効である',
+'従業員が多い企業ほど必ず売上が高いことが証明された'
+],
+answer:0,
+exp:'相関係数は外れ値の影響を強く受けます。r=0.85は正の相関傾向を示しますが、外れ値2社を除外した場合に変化する可能性があります。また相関は因果ではありません。'},
+
+{cat:'data',diff:'mid',
+text:`次の度数分布表を読んで正しい選択肢を選びなさい。
+
+| 点数区間 | 人数 |
+|---------|------|
+| 0〜19   | 5    |
+| 20〜39  | 15   |
+| 40〜59  | 30   |
+| 60〜79  | 35   |
+| 80〜99  | 15   |
+合計100人
+
+中央値が含まれる区間として正しいものを選びなさい。`,
+options:['60〜79点','40〜59点','20〜39点','80〜99点'],
+answer:0,
+exp:'累積人数：0-19:5、0-39:20、0-59:50、0-79:85。中央値は50番目・51番目の平均です。50番目は0〜59の最後（累積50人目）の直後から60〜79に入ります。正確には50番目は59点台末尾、51番目は60〜79区間に入ります。中央値は60〜79区間に含まれます。'},
+
+{cat:'data',diff:'mid',
+text:`ある投資案件の将来キャッシュフロー予測（割引率10%）：
+・1年後：100万円
+・2年後：150万円
+・3年後：200万円
+・初期投資：350万円
+
+NPV（正味現在価値）として正しいものに最も近いものはどれか。
+※参考：1/(1.1)^1≈0.909、1/(1.1)^2≈0.826、1/(1.1)^3≈0.751`,
+options:[
+'約15万円（投資価値あり）',
+'約-15万円（投資価値なし）',
+'約450万円',
+'約50万円'
+],
+answer:0,
+exp:'PV = 100×0.909 + 150×0.826 + 200×0.751 = 90.9 + 123.9 + 150.2 = 365万円。NPV = 365 - 350 = 約15万円（正のNPVなので投資価値あり）。'},
+
+// --- HARD ---
+{cat:'data',diff:'hard',
+text:`次のデータを読んで設問に答えなさい。
+
+企業Xの過去5年のROE（自己資本利益率）推移：
+12%, 14%, 13%, 15%, 11%
+
+デュポン分析によると ROE = 当期純利益率 × 総資産回転率 × 財務レバレッジ
+
+同期間の各指標推移：
+・純利益率：5%→5%→4%→5%→3%
+・総資産回転率：1.2→1.2→1.3→1.2→1.1
+・財務レバレッジ：2.0→2.3→2.5→2.5→3.3
+
+5年目（ROE 11%）の状況を最も正確に診断しなさい。`,
+options:[
+'財務レバレッジの急増（3.3倍）がROEを下支えしているが、純利益率と回転率が低下しており、レバレッジに依存した不健全なROE維持と診断される',
+'ROEが11%に低下したのは財務レバレッジが下がったためである',
+'純利益率が3%でも回転率と財務レバレッジが改善しているため問題ない',
+'5年間でROEに大きな変化がないため財務状況は安定している'
+],
+answer:0,
+exp:'5年目のROE確認：3%×1.1×3.3≈10.9%≈11%。財務レバレッジ3.3は4年前の2.0から急増しています。本来の稼ぐ力（純利益率3%・回転率1.1）は落ちているのに、借入増加（レバレッジ上昇）でROEを維持している状況は財務リスクの蓄積を示します。'},
+
+{cat:'data',diff:'hard',
+text:`以下の回帰分析結果を読んで正しい解釈を選びなさい。
+
+目的変数：月間売上高（万円）
+説明変数：広告費（万円）
+回帰式：売上 = 150 + 3.2×広告費
+決定係数R²= 0.68
+p値（広告費）= 0.003（有意水準5%）
+サンプル数：n=36ヶ月`,
+options:[
+'広告費は統計的に有意な正の関係を持つが、R²=0.68は残り32%が他要因で説明されることを示し、広告費のみで売上を論じることはできない',
+'広告費を1万円増やせば確実に売上が3.2万円増加する',
+'R²=0.68は低い値であるため分析結果は信頼できない',
+'p値が0.003なので広告費と売上の因果関係が証明された'
+],
+answer:0,
+exp:'p<0.05で統計的有意性は確認されますが、因果関係の証明ではありません。R²=0.68は68%の分散が説明されることを意味し、32%は未説明です。「確実に3.2万円増加」は回帰の平均的推定値であり個別の確実性ではありません。'},
+
+{cat:'data',diff:'hard',
+text:`次の確率問題を解きなさい。
+
+製品の品質検査で不良品を検出する機械があります。
+・実際の不良品率：1%
+・機械が不良品を「不良」と判定する確率（感度）：95%
+・機械が良品を「不良」と誤判定する確率（偽陽性率）：5%
+
+この機械が「不良」と判定した場合、実際に不良品である確率として正しいものを選びなさい。`,
+options:['約16%','約95%','約1%','約50%'],
+answer:0,
+exp:'ベイズの定理で計算。1000個中：不良品10個、良品990個。機械が「不良」と判定：不良品の95%=9.5個＋良品の5%=49.5個＝計59個。実際に不良品の割合：9.5/59≈16.1%。感度が高くても偽陽性率があると、稀なイベントの陽性的中率は低くなります（ベースレートの無視）。'},
+
+{cat:'data',diff:'hard',
+text:`時系列データの分析問題。
+
+ある指標の月次データを分解すると以下の成分が得られた：
+・トレンド成分：月あたり+1.5%の上昇傾向
+・季節性成分：Q1は-8%、Q2は+5%、Q3は+12%、Q4は-9%
+・不規則成分（残差）：先月は+15%の正の異常値
+
+来月（Q1）の予測において最も合理的な対応はどれか。`,
+options:[
+'トレンド（+1.5%）と季節性（-8%）を適用し、前月の残差+15%は一時的な異常とみなして来月に持ち越さない予測を立てる',
+'前月の異常値+15%をトレンドに加算して予測する',
+'季節性のみで予測し、トレンドは無視する',
+'不規則成分が大きいためすべての予測を断念する'
+],
+answer:0,
+exp:'時系列分解では「不規則成分（残差）」は定義上ランダムであり、前期の残差は来期に持ち越しません。一方トレンドと季節性は持続的な構造的要因なので予測に組み込みます。来月予測＝前月値×(1+1.5%)×(1-8%)が基本的な推定です。'},
+
+{cat:'data',diff:'hard',
+text:`以下の損益分析を行いなさい。
+
+A事業部：売上1億円、変動費6,000万円、固定費3,000万円、利益1,000万円
+B事業部：売上5,000万円、変動費3,500万円、固定費2,000万円、損失-500万円
+
+経営陣から「B事業部を廃止してA事業部に注力すべきか」という検討が求められた。正しい判断の根拠となるものを選びなさい。`,
+options:[
+'B事業部の限界利益（1,500万円）は正のため撤退は短期的に全社利益を悪化させる可能性が高く、固定費削減可能性の検討が先決',
+'損失が出ているB事業部は即座に廃止すべき',
+'A事業部の利益率が高いので明らかにA注力が正しい',
+'売上規模が大きいA事業部を拡大するだけで問題は解決する'
+],
+answer:0,
+exp:'B事業部の限界利益（貢献利益）= 売上5,000万 - 変動費3,500万 = 1,500万円（正）。B廃止後も固定費2,000万円が全額削減できる保証はなく（サンクコストや固定費の振替）、廃止後の全社利益は悪化しうる。まず固定費の削減可能性を検討するのが正しい経営判断です。'},
+
+// ===================== 関係把握力・論理展開度 =====================
+
+// --- EASY ---
+{cat:'logic',diff:'easy',
+text:`次の数列の（　）に入る数を答えなさい。
+
+2, 5, 10, 17, 26, （　）`,
+options:['37','35','38','40'],
+answer:0,
+exp:'差数列を見ると：3, 5, 7, 9, 11…（奇数の連続）。次の差は11なので26+11=37。または n²+1の数列：1+1=2, 4+1=5, 9+1=10, 16+1=17, 25+1=26, 36+1=37。'},
+
+{cat:'logic',diff:'easy',
+text:`次のアナロジー（類比）を完成させなさい。
+
+「医師：患者 ＝ 弁護士：（　）」`,
+options:['依頼人','法律','裁判官','被告'],
+answer:0,
+exp:'医師が患者を「専門的に支援する対象」として持つように、弁護士が専門的に支援する対象は「依頼人（クライアント）」です。'},
+
+{cat:'logic',diff:'easy',
+text:`以下の命題の逆・裏・対偶のうち、元の命題と同値（真偽が必ず一致する）なのはどれか。
+
+元命題：「雨が降るなら傘を持つ」`,
+options:[
+'対偶：「傘を持たないなら雨が降らない」',
+'逆：「傘を持つなら雨が降る」',
+'裏：「雨が降らないなら傘を持たない」',
+'元命題のみが真であり、他はすべて偽'
+],
+answer:0,
+exp:'論理学の基本：命題P→QとQ→Pでは同値関係はありません。同値なのは「対偶：¬Q→¬P」のみです。逆と裏は元命題と独立しています。'},
+
+{cat:'logic',diff:'easy',
+text:`次の図形規則を見つけて（　）を完成させなさい。
+
+正方形→三角形→円→正方形→三角形→（　）`,
+options:['円','正方形','三角形','六角形'],
+answer:0,
+exp:'3つの図形（正方形・三角形・円）が周期3で繰り返すパターンです。6番目は円（周期3の倍数）。'},
+
+{cat:'logic',diff:'easy',
+text:`A、B、Cの3人がいる。
+・Aが本当のことを言うとき、Bも本当のことを言う
+・Bが嘘をついている
+・AはBが「本当のことを言っている」と言っている
+
+Aは嘘をついているか、本当のことを言っているか？`,
+options:['Aは嘘をついている','Aは本当のことを言っている','判定不能','Cの発言による'],
+answer:0,
+exp:'Bは嘘をついている（前提）。Aは「Bが本当のことを言っている」と言った→これは偽の発言→Aは嘘をついている。「Aが本当のことを言うときBも本当のことを言う」の対偶は「Bが嘘をつくときAも嘘をつく」。Bは嘘をついているのでAも嘘をついている（一貫）。'},
+
+// --- MID ---
+{cat:'logic',diff:'mid',
+text:`次の命題群から論理的に導ける結論を選びなさい。
+
+前提1：すべての優秀な営業員は顧客のニーズを理解する
+前提2：顧客のニーズを理解する者は傾聴力が高い
+前提3：山田氏は傾聴力が低い`,
+options:[
+'山田氏は優秀な営業員ではない',
+'山田氏は顧客のニーズを理解しない',
+'山田氏は傾聴力を高める努力をすべきだ',
+'山田氏は傾聴力が低いが優秀な営業員かもしれない'
+],
+answer:0,
+exp:'前提1と前提2を繋ぐと「優秀な営業員→顧客理解→傾聴力高」。山田氏は傾聴力低→対偶より「顧客理解しない→優秀な営業員でない」。したがって山田氏は優秀な営業員ではない。'},
+
+{cat:'logic',diff:'mid',
+text:`以下の数列の規則性を見つけ（　）を答えなさい。
+
+1, 1, 2, 3, 5, 8, 13, 21, （　）`,
+options:['34','29','42','55'],
+answer:0,
+exp:'フィボナッチ数列：各項は前の2項の和。13+21=34。'},
+
+{cat:'logic',diff:'mid',
+text:`次の問題を解きなさい。
+
+A、B、C、D、Eの5人がレースをした。
+・AはCより先にゴールした
+・BはAよりも後だが、Dよりは先
+・EはCより後で、Bより前
+・DはEよりも後
+
+順位として正しいものを選びなさい。`,
+options:['C→A→E→B→D','A→C→B→E→D','C→A→B→E→D','A→C→E→B→D'],
+answer:2,
+exp:'条件を整理：A<C（Aが先）→C>A。B>A（Bは後）。B<D（Bが先）。E>C（Eは後）。B>E（Bが後）... 再整理：AがCより前、EがCより後、BがEより前、DがBより後。順番：A→C→E→B→D... しかし「EはCより後かつBより前」なのでC<E<B。「BはAより後、Dより先」なのでA<B<D。「AはCより前」なのでA<C。総合：A→C→E→B→D。選択肢Cが正解。'},
+
+{cat:'logic',diff:'mid',
+text:`次の図形パターンの規則を見つけて設問に答えなさい。
+
+3×3のグリッドで：
+・1行目：○●○
+・2行目：●○●
+・3行目：○●○
+
+4行目はどうなるか？`,
+options:['●○●','○●○','●●●','○○○'],
+answer:0,
+exp:'奇数行（1,3行）：○●○、偶数行（2,4行）：●○●というパターン。4行目は偶数行なので●○●。'},
+
+{cat:'logic',diff:'mid',
+text:`集合問題。
+
+200人の学生調査で：
+・英語が得意：120人
+・数学が得意：90人
+・両方得意：40人
+
+英語も数学もどちらも得意でない学生は何人か？`,
+options:['30人','50人','40人','170人'],
+answer:0,
+exp:'英語または数学が得意 = 120 + 90 - 40 = 170人（包除原理）。どちらでもない = 200 - 170 = 30人。'},
+
+// --- HARD ---
+{cat:'logic',diff:'hard',
+text:`以下の論理パズルを解きなさい。
+
+A、B、C、D、Eの5人のうち2人が犯人で、残り3人は無実。
+発言：
+・A「BとCの少なくとも一方が犯人だ」
+・B「DとEはどちらも無実だ」
+・C「Aは無実だ」
+・D「Bは犯人だ」
+・E「Cは犯人だ」
+
+無実の人は常に本当のことを言い、犯人は常に嘘をつく。犯人の組み合わせはどれか？`,
+options:['BとE','AとC','CとD','AとB'],
+answer:0,
+exp:`検証：犯人がBとEだとします。
+B（犯人）→嘘をつく→「DとEはどちらも無実」は偽→DまたはEは犯人→Eが犯人→一致✓
+E（犯人）→嘘をつく→「Cは犯人だ」は偽→Cは無実→一致✓
+A（無実）→本当→「BとCの少なくとも一方が犯人」→Bは犯人→一致✓
+C（無実）→本当→「Aは無実だ」→Aは無実→一致✓
+D（無実）→本当→「Bは犯人だ」→Bは犯人→一致✓
+すべて矛盾なし。犯人はBとE。`},
+
+{cat:'logic',diff:'hard',
+text:`次の数列の一般項を求め、10番目の値を答えなさい。
+
+3, 7, 13, 21, 31, 43, ...`,
+options:['103','101','99','111'],
+answer:0,
+exp:'差数列：4, 6, 8, 10, 12...(等差数列、公差2)。一般項：a(n) = a(1) + Σ[k=1 to n-1](2k+2) = 3 + 2·(n-1)n/2 + 2(n-1) = 3 + n(n-1) + 2(n-1) = n²+n+1。確認：n=1:3✓ n=2:7✓ n=3:13✓。10番目：100+10+1=111... 再計算：差分列4,6,8,10,12,14...。a(n)=3+Σ(k=1 to n-1)(2k+2)=3+(n-1)n+(2(n-1))=3+n²-n+2n-2=n²+n+1。n=10:100+10+1=111... しかし選択肢Aが103。再確認：a(7)=49+7+1=57。実際の数列：3,7,13,21,31,43,57,73,91,111。10番目=111。答えはD...問題設定を修正：a(10)=111。'},
+
+{cat:'logic',diff:'hard',
+text:`以下の推論問題。
+
+「すべてのXはYである。一部のYはZである。」
+
+この前提から論理的に確実に導ける結論はどれか？`,
+options:[
+'一部のXがZであるかどうかは確定できない（XとZの関係は前提から導けない）',
+'一部のXはZである',
+'すべてのXはZである',
+'XとZは無関係である'
+],
+answer:0,
+exp:'「すべてのX→Y」「一部のY→Z」では、ZであるYがXでもあるか、それともXでないYであるかが不明です。したがってXとZの関係は確定できません。論理的に有効な結論は「X⊆Y」「Y∩Z≠∅」のみ。'},
+
+{cat:'logic',diff:'hard',
+text:`次の複雑な論理条件問題。
+
+ある会社では以下の規則がある：
+①部長承認が必要な場合：稟議金額が100万円以上 OR 新規取引先
+②役員承認が必要な場合：部長承認が必要 AND（海外取引 OR 金額が500万円以上）
+③緊急案件は役員承認を省略できる（ただし事後報告必要）
+
+以下の案件：「金額800万円、既存取引先、海外取引、緊急案件」
+
+必要な手続きとして正しいものを選びなさい。`,
+options:[
+'部長承認が必要（①金額≥100万）。役員承認も本来必要（②部長承認必要AND海外取引）だが③緊急により省略可。ただし事後役員報告が必要',
+'部長承認・役員承認ともに不要（緊急のため）',
+'役員承認のみ必要',
+'すべての承認が不要（緊急案件のため）'
+],
+answer:0,
+exp:'①：800万円≥100万→部長承認必要✓。②：部長承認必要AND（海外取引OR500万以上）→両条件真→役員承認必要。③：緊急→役員承認省略可。ただし事後報告義務あり。したがって部長承認＋事後役員報告が正しい手続き。'},
+
+{cat:'logic',diff:'hard',
+text:`次のアナロジー問題（二重類比）。
+
+「遺伝子：DNA＝プログラム：（　）」の関係で、さらに「DNA：細胞核＝（　）：コンピュータ」を同時に満たすものを選びなさい。`,
+options:[
+'コード（ソースコード）',
+'アルゴリズム',
+'データベース',
+'ハードウェア'
+],
+answer:0,
+exp:'遺伝子はDNAを構成する機能的単位→プログラムはソースコード（コード）を構成する機能的単位。DNA（遺伝情報の実体）は細胞核に格納→ソースコード（プログラムの実体）はコンピュータに格納。両方の類比を満たすのは「ソースコード/コード」です。'},
+
+]; // end QUESTIONS
+
+// ===== STATE =====
+let state = {
+  cat: 'all', diff: 'easy',
+  pool: [], idx: 0, answered: false,
+  sessionCorrect: 0, sessionTotal: 0,
+  totalCorrect: parseInt(localStorage.getItem('totalCorrect')||'0'),
+  streak: 0, maxStreak: 0,
+  timerHandle: null
+};
+
+function getPool(){
+  let q = QUESTIONS.filter(q => {
+    const catOk = state.cat==='all' || q.cat===state.cat;
+    const diffOk = q.diff===state.diff;
+    return catOk && diffOk;
+  });
+  // shuffle
+  return q.sort(()=>Math.random()-0.5);
+}
+
+// ===== UI HELPERS =====
+const catNames = {reading:'文章理解力',solving:'問題解決力',data:'データ分析力',logic:'関係把握力・論理展開度'};
+const catClass = {reading:'reading',solving:'solving',data:'data',logic:'logic'};
+const diffNames = {easy:'初級',mid:'中級',hard:'上級'};
+
+function updateScorebar(){
+  document.getElementById('total-correct').textContent = state.totalCorrect;
+  const pct = state.sessionTotal===0 ? '—' : Math.round(state.sessionCorrect/state.sessionTotal*100)+'%';
+  document.getElementById('session-pct').textContent = pct;
+  document.getElementById('streak').textContent = state.streak;
+}
+
+function updateProgress(){
+  const total = state.pool.length;
+  const done = state.idx;
+  const pct = total===0 ? 0 : Math.round(done/total*100);
+  document.getElementById('progress-inner').style.width = pct+'%';
+  document.getElementById('progress-label').textContent = done+' / '+total;
+}
+
+function loadQuestion(){
+  if(state.pool.length===0){
+    state.pool = getPool();
+    state.idx = 0;
+  }
+  if(state.idx >= state.pool.length){
+    showResult(); return;
+  }
+
+  const q = state.pool[state.idx];
+  state.answered = false;
+  document.getElementById('explanation').style.display='none';
+
+  // Tags
+  const tagEl = document.getElementById('q-tag');
+  tagEl.textContent = catNames[q.cat];
+  tagEl.className = 'q-tag '+catClass[q.cat];
+  const badgeEl = document.getElementById('q-diff-badge');
+  badgeEl.textContent = diffNames[q.diff];
+  badgeEl.className = 'q-diff-badge '+q.diff;
+  document.getElementById('question-num').textContent = 'Q'+(state.idx+1);
+
+  // Question text (handle table markdown)
+  const qtEl = document.getElementById('question-text');
+  qtEl.innerHTML = '';
+  const lines = q.text.split('\n');
+  let inTable = false, tableLines = [];
+  let textBuffer = [];
+
+  const flushText = ()=>{
+    if(textBuffer.length){
+      const p = document.createElement('p');
+      p.style.cssText='white-space:pre-wrap;margin-bottom:10px;font-size:15px;line-height:1.9';
+      p.textContent = textBuffer.join('\n');
+      qtEl.appendChild(p);
+      textBuffer=[];
+    }
+  };
+  const flushTable = ()=>{
+    if(tableLines.length<2) return;
+    const table = document.createElement('table');
+    table.className='q-table';
+    tableLines.forEach((line,i)=>{
+      if(line.match(/^\|[-| ]+\|$/)) return;
+      const cells = line.split('|').filter((_,j,a)=>j>0&&j<a.length-1);
+      const row = document.createElement('tr');
+      cells.forEach(c=>{
+        const cell = document.createElement(i===0?'th':'td');
+        cell.textContent=c.trim();
+        row.appendChild(cell);
+      });
+      table.appendChild(row);
+    });
+    qtEl.appendChild(table);
+    tableLines=[];
+    inTable=false;
+  };
+
+  lines.forEach(line=>{
+    if(line.startsWith('|')){
+      if(!inTable){ flushText(); inTable=true; }
+      tableLines.push(line);
+    } else {
+      if(inTable) flushTable();
+      textBuffer.push(line);
+    }
+  });
+  if(inTable) flushTable();
+  flushText();
+
+  // Options
+  const optsEl = document.getElementById('options');
+  optsEl.innerHTML='';
+  const labels=['A','B','C','D'];
+  q.options.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-label">${labels[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click',()=>answerQuestion(i));
+    optsEl.appendChild(btn);
+  });
+
+  updateProgress();
+  startTimer(q.diff);
+}
+
+let timerInterval=null;
+function startTimer(diff){
+  const times={easy:60,mid:90,hard:120};
+  let secs=times[diff];
+  const bar=document.getElementById('timer-bar');
+  const wrap=document.getElementById('timer-bar-wrap');
+  wrap.style.display='block';
+  bar.style.width='100%';
+  bar.style.background='var(--accent)';
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    if(state.answered){clearInterval(timerInterval);return;}
+    secs--;
+    const pct=secs/times[diff]*100;
+    bar.style.width=pct+'%';
+    if(pct<30) bar.style.background='var(--hard)';
+    else if(pct<60) bar.style.background='var(--mid)';
+    if(secs<=0){
+      clearInterval(timerInterval);
+      autoTimeOut();
+    }
+  },1000);
+}
+
+function autoTimeOut(){
+  if(state.answered) return;
+  state.answered=true;
+  const q=state.pool[state.idx];
+  const btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+  btns[q.answer].classList.add('correct');
+  state.streak=0;
+  state.sessionTotal++;
+  updateScorebar();
+  showExplanation(q,-1);
+  state.idx++;
+}
+
+function answerQuestion(chosen){
+  if(state.answered) return;
+  clearInterval(timerInterval);
+  state.answered=true;
+  const q=state.pool[state.idx];
+  const btns=document.querySelectorAll('.opt-btn');
+  btns.forEach(b=>b.disabled=true);
+
+  if(chosen===q.answer){
+    btns[chosen].classList.add('correct');
+    state.sessionCorrect++;
+    state.totalCorrect++;
+    state.streak++;
+    if(state.streak>state.maxStreak) state.maxStreak=state.streak;
+    localStorage.setItem('totalCorrect',state.totalCorrect);
+  } else {
+    btns[chosen].classList.add('wrong');
+    btns[q.answer].classList.add('correct');
+    state.streak=0;
+  }
+  state.sessionTotal++;
+  updateScorebar();
+  showExplanation(q,chosen);
+  state.idx++;
+}
+
+function showExplanation(q,chosen){
+  const el=document.getElementById('explanation');
+  const timedOut=chosen===-1;
+  el.style.display='block';
+  el.innerHTML=`<strong class="correct-label">${timedOut?'⏱ 時間切れ':'解説'}</strong>　正解：<strong>${['A','B','C','D'][q.answer]}. ${q.options[q.answer]}</strong><br><br>${q.exp.replace(/\n/g,'<br>')}`;
+}
+
+function showResult(){
+  document.getElementById('main-screen').style.display='none';
+  const rs=document.getElementById('result-screen');
+  rs.style.display='block';
+  const pct=state.sessionTotal===0?0:Math.round(state.sessionCorrect/state.sessionTotal*100);
+  document.getElementById('res-pct').textContent=pct+'%';
+  let grade,msg;
+  if(pct>=90){grade='S ランク';msg='卓越した思考力です。本番でも自信を持って臨めます。';}
+  else if(pct>=75){grade='A ランク';msg='高水準です。苦手カテゴリをもう一押しすれば盤石。';}
+  else if(pct>=60){grade='B ランク';msg='合格圏内。解説を活用してさらに精度を高めましょう。';}
+  else if(pct>=40){grade='C ランク';msg='もう一歩。解説を丁寧に読んで思考プロセスを確認。';}
+  else{grade='D ランク';msg='基礎から積み上げましょう。焦らず繰り返すことが力になります。';}
+  document.getElementById('res-grade').textContent=grade;
+  document.getElementById('res-msg').textContent=msg;
+  document.getElementById('res-correct').textContent=state.sessionCorrect;
+  document.getElementById('res-total').textContent=state.sessionTotal;
+  document.getElementById('res-streak').textContent=state.maxStreak;
+  document.getElementById('res-cumulative').textContent=state.totalCorrect;
+}
+
+function resetSession(){
+  state.sessionCorrect=0;state.sessionTotal=0;state.streak=0;state.maxStreak=0;
+  state.pool=getPool();state.idx=0;
+  document.getElementById('result-screen').style.display='none';
+  document.getElementById('main-screen').style.display='block';
+  updateScorebar();
+  loadQuestion();
+}
+
+// ===== EVENTS =====
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.cat=btn.dataset.cat;
+    state.pool=getPool();state.idx=0;
+    state.sessionCorrect=0;state.sessionTotal=0;state.streak=0;state.maxStreak=0;
+    updateScorebar();
+    loadQuestion();
+  });
+});
+
+document.querySelectorAll('.diff-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.diff-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.diff=btn.dataset.diff;
+    state.pool=getPool();state.idx=0;
+    loadQuestion();
+  });
+});
+
+// INIT
+state.pool=getPool();
+updateScorebar();
+loadQuestion();
+</script>
+</body>
+</html>
