@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>思考力診断テスト</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --accent: #c0392b;
+    --accent2: #2c3e7a;
+    --muted: #7a7a7a;
+    --border: #d0c8b8;
+    --correct: #27ae60;
+    --wrong: #c0392b;
+    --card: #faf7f2;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif JP', serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    background-image: 
+      repeating-linear-gradient(0deg, transparent, transparent 27px, rgba(0,0,0,0.04) 28px);
+  }
+
+  #app {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 40px 0 32px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    display: block;
+    width: 60%;
+    height: 1px;
+    background: var(--border);
+    margin: 8px auto 0;
+  }
+  .header h1 {
+    font-size: 2rem;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+  }
+  .header h1 span {
+    color: var(--accent);
+  }
+  .header p {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* START SCREEN */
+  #start-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .start-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 32px 0;
+  }
+  .info-card {
+    border: 1px solid var(--border);
+    padding: 20px 12px;
+    background: var(--card);
+  }
+  .info-card .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--accent2);
+    display: block;
+  }
+  .info-card .label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-top: 4px;
+    display: block;
+    letter-spacing: 0.1em;
+  }
+  .category-list {
+    text-align: left;
+    border: 1px solid var(--border);
+    background: var(--card);
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+  .category-list h3 {
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .category-list ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .category-list li {
+    font-size: 0.9rem;
+    padding-left: 16px;
+    position: relative;
+  }
+  .category-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  /* PROGRESS BAR */
+  .progress-bar-wrap {
+    margin-bottom: 24px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent2);
+    transition: width 0.4s ease;
+  }
+
+  /* QUESTION CARD */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent2);
+    padding: 28px 28px 24px;
+    margin-bottom: 20px;
+  }
+  .q-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .q-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    background: var(--accent2);
+    color: white;
+    padding: 2px 8px;
+  }
+  .q-category {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .q-text {
+    font-size: 1rem;
+    line-height: 1.9;
+    margin-bottom: 8px;
+  }
+  .q-sub {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-top: 8px;
+    line-height: 1.7;
+    border-left: 2px solid var(--border);
+    padding-left: 12px;
+  }
+
+  /* TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    margin: 16px 0;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .data-table th {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 8px 12px;
+    text-align: center;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+  .data-table td {
+    border: 1px solid var(--border);
+    padding: 7px 12px;
+    text-align: center;
+  }
+  .data-table tr:nth-child(even) td {
+    background: rgba(0,0,0,0.02);
+  }
+  .data-table .row-header {
+    text-align: left;
+    font-family: 'Noto Serif JP', serif;
+    background: rgba(44,62,122,0.05);
+  }
+
+  /* SVG PUZZLE */
+  .svg-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0;
+  }
+  .svg-wrap svg {
+    border: 1px solid var(--border);
+    background: white;
+  }
+
+  /* TEXT PASSAGE */
+  .passage {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    font-size: 0.88rem;
+    line-height: 2;
+    margin: 12px 0;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .passage .underline {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 3px;
+  }
+  .reorder-items {
+    background: white;
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    font-size: 0.88rem;
+    line-height: 1.9;
+    margin: 12px 0;
+  }
+  .reorder-items p {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .reorder-items p:last-child { border-bottom: none; }
+  .reorder-items strong { color: var(--accent2); }
+
+  /* OPTIONS */
+  .options {
+    display: grid;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    background: white;
+    cursor: pointer;
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.9rem;
+    text-align: left;
+    line-height: 1.7;
+    transition: all 0.15s;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent2);
+    background: rgba(44,62,122,0.04);
+    transform: translateX(3px);
+  }
+  .option-btn .opt-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--accent2);
+    min-width: 20px;
+    font-size: 0.85rem;
+    margin-top: 1px;
+  }
+  .option-btn.selected {
+    border-color: var(--accent2);
+    background: rgba(44,62,122,0.07);
+  }
+  .option-btn.correct {
+    border-color: var(--correct);
+    background: rgba(39,174,96,0.08);
+  }
+  .option-btn.correct .opt-label { color: var(--correct); }
+  .option-btn.wrong {
+    border-color: var(--wrong);
+    background: rgba(192,57,43,0.07);
+  }
+  .option-btn.wrong .opt-label { color: var(--wrong); }
+  .option-btn:disabled { cursor: default; }
+
+  /* FEEDBACK */
+  .feedback {
+    margin-top: 16px;
+    padding: 16px 20px;
+    border-left: 4px solid var(--correct);
+    background: rgba(39,174,96,0.06);
+    font-size: 0.88rem;
+    line-height: 1.8;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.wrong-fb { border-color: var(--wrong); background: rgba(192,57,43,0.05); }
+  .feedback strong { font-weight: 700; }
+
+  /* NAVIGATION */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .nav-score {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  /* BUTTONS */
+  .btn {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 0.9rem;
+    padding: 12px 28px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.15s;
+    border: none;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+  }
+  .btn-secondary:hover { background: var(--ink); color: var(--paper); }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .btn-accent {
+    background: var(--accent);
+    color: white;
+  }
+  .btn-accent:hover { background: #a93226; }
+
+  /* RESULT SCREEN */
+  #result-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .score-display {
+    margin: 32px 0;
+    padding: 40px;
+    border: 2px solid var(--ink);
+    background: var(--card);
+    position: relative;
+  }
+  .score-display::before {
+    content: 'RESULT';
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    display: block;
+    margin-bottom: 12px;
+  }
+  .score-big {
+    font-size: 5rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--accent2);
+  }
+  .score-total {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.2rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .score-comment {
+    margin-top: 16px;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+  .result-breakdown {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 24px 0;
+    text-align: left;
+  }
+  .breakdown-item {
+    border: 1px solid var(--border);
+    padding: 14px 16px;
+    background: var(--card);
+  }
+  .breakdown-item .cat { font-size: 0.78rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+  .breakdown-item .score { font-size: 1.1rem; font-weight: 700; margin-top: 4px; }
+
+  /* HIDDEN */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>思考力<span>診断</span>テスト</h1>
+    <p>DATA-style aptitude quiz — numerical / verbal / logical</p>
+  </div>
+
+  <!-- START -->
+  <div id="start-screen">
+    <div class="start-info">
+      <div class="info-card"><span class="num">40</span><span class="label">問題数</span></div>
+      <div class="info-card"><span class="num">4</span><span class="label">ジャンル</span></div>
+      <div class="info-card"><span class="num">―</span><span class="label">時間制限なし</span></div>
+    </div>
+    <div class="category-list">
+      <h3>出題ジャンル</h3>
+      <ul>
+        <li>資料解釈（表・割合・実数）</li>
+        <li>数的推理（パズル・比率・規則）</li>
+        <li>言語読解（傍線部・文脈）</li>
+        <li>文章整序（論理的順序）</li>
+        <li>図形推理（回転・移動・軌跡）</li>
+        <li>論理推理（命題・推論）</li>
+      </ul>
+    </div>
+    <button class="btn btn-primary" onclick="startQuiz()">テスト開始</button>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz-screen" class="hidden">
+    <div class="progress-bar-wrap">
+      <div class="progress-meta">
+        <span id="q-counter">問題 1 / 40</span>
+        <span id="q-score-top">正解: 0</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+    </div>
+    <div id="question-area"></div>
+    <div class="nav">
+      <button class="btn btn-secondary" id="prev-btn" onclick="prevQ()" disabled>◀ 前の問題</button>
+      <span class="nav-score" id="nav-score"></span>
+      <button class="btn btn-primary" id="next-btn" onclick="nextQ()">次の問題 ▶</button>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result-screen" class="hidden">
+    <div class="score-display">
+      <div class="score-big" id="final-score">0</div>
+      <div class="score-total" id="final-total">/ 40</div>
+      <div class="score-comment" id="final-comment"></div>
+    </div>
+    <div class="result-breakdown" id="result-breakdown"></div>
+    <button class="btn btn-primary" onclick="restartQuiz()" style="margin-top:8px">もう一度挑戦</button>
+  </div>
+</div>
+
+<script>
+// ===== QUESTION BANK =====
+const questions = [
+
+// ── 資料解釈 (10問) ──────────────────────────────────────────
+
+{
+  id:1, cat:'資料解釈',
+  text:'下の表はある市の年齢別人口（千人）の推移を示したものである。次の記述のうち正しいものはどれか。',
+  table:{
+    headers:['年度','0〜14歳','15〜64歳','65歳以上','合計'],
+    rows:[
+      ['2010年','85','420','95','600'],
+      ['2015年','78','415','107','600'],
+      ['2020年','70','400','130','600'],
+    ]
+  },
+  sub:'（単位：千人）',
+  options:[
+    {label:'A', text:'2010年から2020年にかけて、65歳以上の人口の増加数は50千人を超える。'},
+    {label:'B', text:'2015年の15〜64歳人口が合計に占める割合は70%を超えている。'},
+    {label:'C', text:'0〜14歳人口は各年とも合計の15%以上を占めている。'},
+    {label:'D', text:'2020年の65歳以上の割合は2010年の約1.5倍である。'},
+    {label:'E', text:'15〜64歳人口は10年間で20千人以上減少している。'},
+  ],
+  answer:1, // B
+  explain:'2015年の15〜64歳は415千人、合計600千人。415÷600≒69.2%で70%を超えない（×）。\nA：65歳以上は95→130で35千人増（×）。\nC：2020年は70/600≒11.7%で15%未満（×）。\nD：95/600≒15.8%、130/600≒21.7%。21.7÷15.8≒1.37倍で約1.5倍ではない（×）。\nE：420→400で20千人減少、「以上」を含むため正しい（○）。\n\n正解はE。',
+  answer:4
+},
+
+{
+  id:2, cat:'資料解釈',
+  text:'下の表はある工場の製品別月間生産数（個）を示している。次の記述のうち正しいものはどれか。',
+  table:{
+    headers:['月','製品X','製品Y','製品Z','合計'],
+    rows:[
+      ['4月','1200','800','500','2500'],
+      ['5月','1100','900','600','2600'],
+      ['6月','1300','850','750','2900'],
+    ]
+  },
+  sub:'（単位：個）',
+  options:[
+    {label:'A', text:'製品Xの3ヶ月合計は3600個を超える。'},
+    {label:'B', text:'6月における製品Zの割合は25%を超えている。'},
+    {label:'C', text:'製品Yの生産数は3ヶ月を通じて増加し続けている。'},
+    {label:'D', text:'5月の合計は4月より5%以上増加している。'},
+    {label:'E', text:'6月の製品Xの割合は4月より低い。'},
+  ],
+  answer:1,
+  explain:'A：X合計は1200+1100+1300=3600個。「超える」ではなくちょうど3600（×）。\nB：750÷2900≒25.9%で25%超（○）。\nC：Y is 800→900→850で6月に減少（×）。\nD：2600÷2500=1.04、4%増で5%未満（×）。\nE：4月は1200/2500=48%、6月は1300/2900≒44.8%で確かに低下（○）。\n\n正解はB。'
+},
+
+{
+  id:3, cat:'資料解釈',
+  text:'下の表はある学校の部活動加入者数（人）を示している。次の記述のうち誤っているものはどれか。',
+  table:{
+    headers:['部活','1年生','2年生','3年生','合計'],
+    rows:[
+      ['野球部','20','18','15','53'],
+      ['サッカー部','25','22','17','64'],
+      ['テニス部','15','14','12','41'],
+      ['合計','60','54','44','158'],
+    ]
+  },
+  options:[
+    {label:'A', text:'3年生の人数は全体の約27.8%を占めている。'},
+    {label:'B', text:'サッカー部の1年生は同学年全体の約41.7%を占める。'},
+    {label:'C', text:'テニス部の合計は野球部より15人少ない。'},
+    {label:'D', text:'2年生の合計は1年生より10%以上少ない。'},
+    {label:'E', text:'全学年を通じて最も人数が多い学年は1年生である。'},
+  ],
+  answer:2,
+  explain:'C：53-41=12人少ない（「15人」は誤り）。これが誤りの記述。\nA：44÷158≒27.8%（○）。\nB：25÷60≒41.7%（○）。\nD：54÷60≒0.9、つまり10%減少（10%以上）（○）。\nE：60人で最多（○）。\n\n正解（誤り）はC。'
+},
+
+{
+  id:4, cat:'資料解釈',
+  text:'下の表はある店舗の商品カテゴリ別売上（万円）と前年比（%）を示している。今年の食料品の売上として最も近い値はどれか。',
+  table:{
+    headers:['カテゴリ','昨年売上（万円）','前年比（%）'],
+    rows:[
+      ['食料品','1500','108'],
+      ['衣料品','800','95'],
+      ['日用品','600','112'],
+      ['電化製品','1200','90'],
+    ]
+  },
+  options:[
+    {label:'A', text:'1560万円'},
+    {label:'B', text:'1580万円'},
+    {label:'C', text:'1620万円'},
+    {label:'D', text:'1650万円'},
+    {label:'E', text:'1680万円'},
+  ],
+  answer:2,
+  explain:'1500万円 × 1.08 = 1620万円。\n\n正解はC。'
+},
+
+{
+  id:5, cat:'資料解釈',
+  text:'下の表はある会社の部門別従業員数（人）と平均年齢を示している。全社の平均年齢として最も近い値はどれか。',
+  table:{
+    headers:['部門','従業員数（人）','平均年齢（歳）'],
+    rows:[
+      ['営業部','40','32'],
+      ['開発部','30','28'],
+      ['管理部','20','38'],
+      ['製造部','10','35'],
+    ]
+  },
+  options:[
+    {label:'A', text:'31.5歳'},
+    {label:'B', text:'32.0歳'},
+    {label:'C', text:'32.5歳'},
+    {label:'D', text:'33.0歳'},
+    {label:'E', text:'33.25歳'},
+  ],
+  answer:2,
+  explain:'加重平均：(40×32 + 30×28 + 20×38 + 10×35) ÷ 100\n= (1280 + 840 + 760 + 350) ÷ 100\n= 3230 ÷ 100 = 32.3歳\n\n最も近いのはB（32.0歳）…いえ、C（32.5歳）です。\n32.3は32.0と32.5の中間より32.5寄り→正解はC。'
+},
+
+{
+  id:6, cat:'資料解釈',
+  text:'下の表はある地域の交通手段別利用者数（万人/日）の推移を示す。2020年から2022年にかけて、利用者数の減少幅が最も大きい交通手段はどれか。',
+  table:{
+    headers:['交通手段','2020年','2021年','2022年'],
+    rows:[
+      ['電車','310','285','270'],
+      ['バス','120','108','100'],
+      ['自転車','85','88','92'],
+      ['自動車','150','155','162'],
+    ]
+  },
+  options:[
+    {label:'A', text:'電車'},
+    {label:'B', text:'バス'},
+    {label:'C', text:'自転車'},
+    {label:'D', text:'自動車'},
+    {label:'E', text:'電車とバスが同じ'},
+  ],
+  answer:0,
+  explain:'2020→2022年の変化：\n電車：310-270 = 40万人減\nバス：120-100 = 20万人減\n自転車：増加\n自動車：増加\n\n最も減少幅が大きいのは電車（40万人）。正解はA。'
+},
+
+{
+  id:7, cat:'資料解釈',
+  text:'下の表はある国の輸出入額（億ドル）を示している。貿易収支（輸出－輸入）が最も大きい年はどれか。',
+  table:{
+    headers:['年','輸出額','輸入額'],
+    rows:[
+      ['2018年','8500','7800'],
+      ['2019年','8200','7600'],
+      ['2020年','7600','7200'],
+      ['2021年','9100','8600'],
+      ['2022年','9800','9000'],
+    ]
+  },
+  options:[
+    {label:'A', text:'2018年'},
+    {label:'B', text:'2019年'},
+    {label:'C', text:'2020年'},
+    {label:'D', text:'2021年'},
+    {label:'E', text:'2022年'},
+  ],
+  answer:4,
+  explain:'各年の貿易収支（輸出－輸入）：\n2018: 700 / 2019: 600 / 2020: 400 / 2021: 500 / 2022: 800\n\n最大は2022年（800億ドル）。正解はE。'
+},
+
+{
+  id:8, cat:'資料解釈',
+  text:'下の表はある会社の4半期別売上（百万円）を示している。年間売上に占める第4四半期の割合として最も近い値はどれか。',
+  table:{
+    headers:['四半期','売上（百万円）'],
+    rows:[['Q1','380'],['Q2','420'],['Q3','350'],['Q4','450']]
+  },
+  options:[
+    {label:'A', text:'約27%'},
+    {label:'B', text:'約28%'},
+    {label:'C', text:'約29%'},
+    {label:'D', text:'約30%'},
+    {label:'E', text:'約31%'},
+  ],
+  answer:2,
+  explain:'合計：380+420+350+450 = 1600百万円\nQ4の割合：450÷1600 = 0.28125 ≒ 28.1%\n\n最も近いのはB（約28%）。正解はB。'
+},
+
+{
+  id:9, cat:'資料解釈',
+  text:'下の表は5人の学生のテスト得点を示している。5人の平均点と中央値の差として正しいものはどれか。',
+  table:{
+    headers:['学生','得点'],
+    rows:[['A','72'],['B','85'],['C','63'],['D','91'],['E','69']]
+  },
+  options:[
+    {label:'A', text:'0点'},
+    {label:'B', text:'4点'},
+    {label:'C', text:'6点'},
+    {label:'D', text:'8点'},
+    {label:'E', text:'10点'},
+  ],
+  answer:0,
+  explain:'合計：72+85+63+91+69 = 380点。平均：380÷5 = 76点。\n昇順に並べると：63, 69, 72, 85, 91。中央値（3番目）= 72点。\n差：76-72 = 4点。\n\n正解はB。',
+  answer:1
+},
+
+{
+  id:10, cat:'資料解釈',
+  text:'下の表はある店の曜日別来客数（人）を示している。来客数が週平均を上回る曜日の数として正しいものはどれか。',
+  table:{
+    headers:['曜日','月','火','水','木','金','土','日'],
+    rows:[['来客数','95','88','102','97','115','178','165']]
+  },
+  options:[
+    {label:'A', text:'2曜日'},
+    {label:'B', text:'3曜日'},
+    {label:'C', text:'4曜日'},
+    {label:'D', text:'5曜日'},
+    {label:'E', text:'6曜日'},
+  ],
+  answer:1,
+  explain:'合計：95+88+102+97+115+178+165 = 840人。平均：840÷7 = 120人。\n120人超え：金（115→×）、土（178→○）、日（165→○）。\n120人超えは土・日の2曜日。\n\n正解はA。',
+  answer:0
+},
+
+// ── 数的推理 (10問) ──────────────────────────────────────────
+
+{
+  id:11, cat:'数的推理',
+  text:'下の円形の図において、中心を挟んで向かい合う数字の間に規則がある。「?」に入る数字はどれか。',
+  svg:`<svg width="220" height="220" viewBox="0 0 220 220" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="110" cy="110" r="90" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+    <line x1="110" y1="20" x2="110" y2="200" stroke="#ccc" stroke-width="1"/>
+    <line x1="20" y1="110" x2="200" y2="110" stroke="#ccc" stroke-width="1"/>
+    <line x1="46" y1="46" x2="174" y2="174" stroke="#ccc" stroke-width="1"/>
+    <line x1="174" y1="46" x2="46" y2="174" stroke="#ccc" stroke-width="1"/>
+    <circle cx="110" cy="110" r="18" fill="#1a1a2e"/>
+    <text x="110" y="36" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">24</text>
+    <text x="110" y="196" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">8</text>
+    <text x="190" y="115" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">18</text>
+    <text x="30" y="115" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">6</text>
+    <text x="170" y="50" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">?</text>
+    <text x="50" y="180" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">4</text>
+    <text x="50" y="50" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">15</text>
+    <text x="170" y="180" text-anchor="middle" font-size="16" font-family="monospace" font-weight="bold">5</text>
+  </svg>`,
+  options:[
+    {label:'A', text:'9'},
+    {label:'B', text:'12'},
+    {label:'C', text:'15'},
+    {label:'D', text:'18'},
+    {label:'E', text:'21'},
+  ],
+  answer:1,
+  explain:'向かい合う数字のペアを確認：24↔8（3倍）、18↔6（3倍）、15↔5（3倍）、?↔4。\n同じ法則（3倍）を適用すると、? = 4×3 = 12。\n\n正解はB。'
+},
+
+{
+  id:12, cat:'数的推理',
+  text:'下の3×3のマス目において、行・列・対角線の数字の関係に規則がある。「?」に入る数字はどれか。',
+  svg:`<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <rect x="10" y="10" width="180" height="180" fill="white" stroke="#1a1a2e" stroke-width="2"/>
+    <line x1="70" y1="10" x2="70" y2="190" stroke="#1a1a2e" stroke-width="1.5"/>
+    <line x1="130" y1="10" x2="130" y2="190" stroke="#1a1a2e" stroke-width="1.5"/>
+    <line x1="10" y1="70" x2="190" y2="70" stroke="#1a1a2e" stroke-width="1.5"/>
+    <line x1="10" y1="130" x2="190" y2="130" stroke="#1a1a2e" stroke-width="1.5"/>
+    <text x="40" y="48" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">2</text>
+    <text x="100" y="48" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">7</text>
+    <text x="160" y="48" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">6</text>
+    <text x="40" y="108" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">9</text>
+    <text x="100" y="108" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">5</text>
+    <text x="160" y="108" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">1</text>
+    <text x="40" y="168" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">4</text>
+    <text x="100" y="168" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">3</text>
+    <text x="160" y="168" text-anchor="middle" font-size="18" font-family="monospace" font-weight="bold">?</text>
+  </svg>`,
+  sub:'各行・列・対角線の合計はすべて等しい（魔方陣）。',
+  options:[
+    {label:'A', text:'6'},
+    {label:'B', text:'7'},
+    {label:'C', text:'8'},
+    {label:'D', text:'9'},
+    {label:'E', text:'10'},
+  ],
+  answer:2,
+  explain:'1行目の合計：2+7+6 = 15。魔方陣の定数は15。\n3行目：4+3+? = 15 → ? = 8。\n確認：1列目 2+9+4=15 ○、2列目 7+5+3=15 ○、対角線 2+5+8=15 ○。\n\n正解はC。'
+},
+
+{
+  id:13, cat:'数的推理',
+  text:'ある数列がある。空欄（?）に入る数字はどれか。\n\n2, 3, 5, 8, 13, 21, ( ? )',
+  options:[
+    {label:'A', text:'29'},
+    {label:'B', text:'31'},
+    {label:'C', text:'33'},
+    {label:'D', text:'34'},
+    {label:'E', text:'36'},
+  ],
+  answer:3,
+  explain:'各項は前2項の和（フィボナッチ数列）。\n2, 3, 5=2+3, 8=3+5, 13=5+8, 21=8+13, 34=13+21。\n\n正解はD（34）。'
+},
+
+{
+  id:14, cat:'数的推理',
+  text:'下の数列の空欄に入る数として正しいものはどれか。\n\n1, 4, 9, 16, 25, ( ? ), 49',
+  options:[
+    {label:'A', text:'30'},
+    {label:'B', text:'33'},
+    {label:'C', text:'36'},
+    {label:'D', text:'40'},
+    {label:'E', text:'42'},
+  ],
+  answer:2,
+  explain:'1, 4, 9, 16, 25, 36, 49 は 1², 2², 3², 4², 5², 6², 7²。\n? = 6² = 36。\n\n正解はC。'
+},
+
+{
+  id:15, cat:'数的推理',
+  text:'ある規則に従って並んでいる数列がある。空欄に入る数はどれか。\n\n3, 6, 12, 24, ( ? ), 96',
+  options:[
+    {label:'A', text:'36'},
+    {label:'B', text:'40'},
+    {label:'C', text:'42'},
+    {label:'D', text:'48'},
+    {label:'E', text:'60'},
+  ],
+  answer:3,
+  explain:'各項を2倍した数列：3×2=6, 6×2=12, 12×2=24, 24×2=48, 48×2=96。\n? = 48。\n\n正解はD。'
+},
+
+{
+  id:16, cat:'数的推理',
+  text:'5人がリレーを走る。走る順番について次の条件がある。AはCより前に走る。BはDより後に走る。EはAより前に走る。このとき、必ず正しいといえるものはどれか。',
+  options:[
+    {label:'A', text:'BはEより前に走る。'},
+    {label:'B', text:'DはCより後に走る。'},
+    {label:'C', text:'EはBより前に走る。'},
+    {label:'D', text:'EはCより前に走る。'},
+    {label:'E', text:'BはAより前に走る。'},
+  ],
+  answer:3,
+  explain:'条件を整理：E→A→C（EはAより前、AはCより前）。B→Dの逆でD→Bは×。\n確定している順序：E < A < C（数字が小さいほど前）。\nD：EはCより前（E<A<CよりE<Cは確定）→正しい（○）。\nA：BとEの関係は不定（×）。B：DとCの関係は不定（×）。\nC：EとBの関係は不定（×）。E：BはAより後（B<Dのみ確定、AとBの関係は不定）（×）。\n\n正解はD。'
+},
+
+{
+  id:17, cat:'数的推理',
+  text:'ある商品を定価の20%引きで売ったが、それでも仕入れ値の25%の利益が出た。定価は仕入れ値の何倍か。',
+  options:[
+    {label:'A', text:'1.5倍'},
+    {label:'B', text:'1.5625倍'},
+    {label:'C', text:'1.6倍'},
+    {label:'D', text:'1.75倍'},
+    {label:'E', text:'1.8倍'},
+  ],
+  answer:1,
+  explain:'仕入れ値をCとする。売価 = C×1.25（25%の利益）。\n売価 = 定価×0.8（20%引き）。\n定価 = C×1.25÷0.8 = C×1.5625。\n\n正解はB（1.5625倍）。'
+},
+
+{
+  id:18, cat:'数的推理',
+  text:'下の図形のパターンにおいて、「?」の位置に入る図形として正しいものはどれか。\n●○○ / ○●○ / ○○? ← 黒丸が左上→中央→右下と移動している',
+  options:[
+    {label:'A', text:'●（右下に黒丸）'},
+    {label:'B', text:'○（空白）'},
+    {label:'C', text:'●（中央に黒丸）'},
+    {label:'D', text:'●（左下に黒丸）'},
+    {label:'E', text:'●（右上に黒丸）'},
+  ],
+  answer:0,
+  explain:'黒丸は左上(1,1)→中央(2,2)→右下(3,3)と対角線上に移動している。\n3行目の右下（3,3）の位置に黒丸が来る。\n\n正解はA。'
+},
+
+{
+  id:19, cat:'数的推理',
+  text:'PとQの2人がある仕事をする。Pだけでは12日、Qだけでは18日かかる。2人で一緒にやると何日かかるか。',
+  options:[
+    {label:'A', text:'6日'},
+    {label:'B', text:'7日'},
+    {label:'C', text:'7.2日'},
+    {label:'D', text:'8日'},
+    {label:'E', text:'9日'},
+  ],
+  answer:2,
+  explain:'P一日の仕事量：1/12。Q一日の仕事量：1/18。\n合計：1/12 + 1/18 = 3/36 + 2/36 = 5/36。\n完成まで：36/5 = 7.2日。\n\n正解はC。'
+},
+
+{
+  id:20, cat:'数的推理',
+  text:'下の図は、数字が入った4つの円が矢印でつながれている。矢印の規則にしたがうと「?」に入る数はどれか。\n\n3 →（×4）→ 12 →（×4）→ 48 →（×4）→ ?',
+  options:[
+    {label:'A', text:'144'},
+    {label:'B', text:'168'},
+    {label:'C', text:'192'},
+    {label:'D', text:'196'},
+    {label:'E', text:'200'},
+  ],
+  answer:2,
+  explain:'48 × 4 = 192。\n\n正解はC。'
+},
+
+// ── 言語読解 (10問) ──────────────────────────────────────────
+
+{
+  id:21, cat:'言語読解',
+  text:'次の文章を読み、下線部「この矛盾」が指すものとして最も適切なものを選べ。',
+  passage:'近代社会においては、個人の自由が最大限尊重されるべきとされている。しかし、完全な自由が認められれば、他者の自由を侵害する行為も許容されてしまう。<u>この矛盾</u>を解決するため、社会は法律という形でルールを設けているのである。',
+  options:[
+    {label:'A', text:'法律が個人の自由を制限するという事実。'},
+    {label:'B', text:'個人の完全な自由の追求が他者の自由を侵害しうるという問題。'},
+    {label:'C', text:'近代社会において個人の自由が尊重されていない現状。'},
+    {label:'D', text:'法律が存在するにもかかわらず自由が制限されること。'},
+    {label:'E', text:'社会のルールが時代とともに変化すること。'},
+  ],
+  answer:1,
+  explain:'下線部の直前を確認：「完全な自由が認められれば、他者の自由を侵害する行為も許容される」という論理的矛盾を指している。個人の自由を最大化しようとすれば、他者の自由という別の価値と衝突するという矛盾。\n\n正解はB。'
+},
+
+{
+  id:22, cat:'言語読解',
+  text:'次の文章の空欄に入る語句として最も適切なものを選べ。',
+  passage:'科学技術の進歩は人々の生活を豊かにしてきた。医療技術の発展により平均寿命は延び、通信技術の革新により世界中の人々が瞬時につながれるようになった。____、技術の進歩は新たな問題も生み出している。環境汚染、プライバシーの侵害、雇用の喪失などがその例として挙げられる。',
+  options:[
+    {label:'A', text:'したがって'},
+    {label:'B', text:'あるいは'},
+    {label:'C', text:'一方で'},
+    {label:'D', text:'すなわち'},
+    {label:'E', text:'なぜなら'},
+  ],
+  answer:2,
+  explain:'前半は技術進歩の肯定的側面、後半は否定的側面。対比・逆接の接続詞が必要。「一方で」が最適。「したがって」は順接、「すなわち」は言い換え、「なぜなら」は理由、「あるいは」は選択で不適。\n\n正解はC。'
+},
+
+{
+  id:23, cat:'言語読解',
+  text:'次の文章の主旨として最も適切なものを選べ。',
+  passage:'読書は単に知識を得る手段ではない。書かれた言葉と対話することで、読者は著者の思考の跡をたどり、自らの思考を深める。優れた本は答えを与えるのではなく、問いを立てる力を養う。その意味で、読書は受動的な行為ではなく、能動的な思考の実践なのである。',
+  options:[
+    {label:'A', text:'読書によって多くの知識を得ることができる。'},
+    {label:'B', text:'優れた本は読者に明確な答えを提示する。'},
+    {label:'C', text:'読書は思考を深め、問いを立てる能動的な行為である。'},
+    {label:'D', text:'著者と読者が対話することで新しい知識が生まれる。'},
+    {label:'E', text:'読書は受動的な情報収集の手段として重要である。'},
+  ],
+  answer:2,
+  explain:'文章全体の主張：読書は単なる知識習得でなく、能動的な思考の実践である。「問いを立てる力」「能動的な思考の実践」がキーワード。Cがこれを正確に表している。\n\n正解はC。'
+},
+
+{
+  id:24, cat:'言語読解',
+  text:'次の文章で筆者が最も言いたいことはどれか。',
+  passage:'言語は単なるコミュニケーションの道具ではない。言語は思考の形式そのものを規定する。ある概念に対応する言葉を持たない言語を使う人々は、その概念を把握すること自体が困難になる場合がある。色の識別においても、色名の豊富な言語を使う人ほど色の違いを細かく知覚できるという研究結果がある。',
+  options:[
+    {label:'A', text:'言語の違いは文化の違いを反映している。'},
+    {label:'B', text:'言語は人の思考や知覚のあり方に影響を与える。'},
+    {label:'C', text:'豊かな語彙を持つ言語ほど優れた言語である。'},
+    {label:'D', text:'コミュニケーション能力を高めるには語彙を増やすべきだ。'},
+    {label:'E', text:'言語学の研究は科学的根拠に基づくべきである。'},
+  ],
+  answer:1,
+  explain:'「言語は思考の形式そのものを規定する」が主張。色の知覚の例はその根拠。言語が思考・知覚に影響を与えるという内容がBに対応。\n\n正解はB。'
+},
+
+{
+  id:25, cat:'言語読解',
+  text:'次の文章の下線部「それ」が指すものとして最も適切なものを選べ。',
+  passage:'江戸時代、日本は200年以上にわたって鎖国政策を維持した。外国との貿易は長崎の出島に限定され、海外の情報は厳しく管理された。しかし<u>それ</u>は、日本が完全に外部と断絶していたことを意味するわけではない。オランダや中国との交流は継続され、西洋の学問「蘭学」が発展した。',
+  options:[
+    {label:'A', text:'長崎の出島での限定的な貿易。'},
+    {label:'B', text:'蘭学が発展したこと。'},
+    {label:'C', text:'海外情報の厳しい管理。'},
+    {label:'D', text:'江戸時代の鎖国政策の維持。'},
+    {label:'E', text:'外国との貿易の完全な停止。'},
+  ],
+  answer:3,
+  explain:'「それ」の直前の内容を探す。「鎖国政策を維持した」「貿易は長崎に限定」「情報を管理」という一連の事実を「それ」が指し、「完全断絶を意味するわけではない」と続く。最も包括的なのは「鎖国政策の維持」（D）。\n\n正解はD。'
+},
+
+{
+  id:26, cat:'言語読解',
+  text:'次の文章の空欄に入る文として最も適切なものを選べ。',
+  passage:'都市化が進むにつれ、人々は自然から遠ざかるようになった。___。都市生活者の中には、自然回帰への志向を持つ者も少なくない。週末に農村を訪れ、農作業を体験するグリーンツーリズムの人気もその一つの表れである。',
+  options:[
+    {label:'A', text:'しかし人間は本来、自然とともに生きることを求める存在であるとも言える。'},
+    {label:'B', text:'都市の経済的発展は今後も続いていくだろう。'},
+    {label:'C', text:'自然は保護されるべきであり、そのための政策が必要だ。'},
+    {label:'D', text:'農村の過疎化問題は深刻な社会問題となっている。'},
+    {label:'E', text:'近代化とともに伝統文化が失われつつある。'},
+  ],
+  answer:0,
+  explain:'前後の文脈：都市化で自然離れ→（空欄）→自然回帰志向。「しかし人間は本来自然を求める」という逆接＋動機説明がつなぎとして最適。後半のグリーンツーリズムへの展開とも一致。\n\n正解はA。'
+},
+
+{
+  id:27, cat:'言語読解',
+  text:'次の対話において、Bの発言の意図として最も適切なものを選べ。\n\nA「明日の会議、延期できないかな。準備が全然できてない」\nB「そうか。ただ、部長はもう新幹線の切符を買ってるらしいよ」',
+  options:[
+    {label:'A', text:'部長が遠方から来ることを伝えて、準備の応援を申し出ている。'},
+    {label:'B', text:'延期が難しい状況であることを間接的に示唆している。'},
+    {label:'C', text:'部長が交通費をすでに支払っていることを問題視している。'},
+    {label:'D', text:'新幹線を使って会議に来る部長への不満を表明している。'},
+    {label:'E', text:'Aに対して早めに準備するよう直接指示している。'},
+  ],
+  answer:1,
+  explain:'Bは直接「延期できない」と言わず、「部長が切符を買っている」という事実を伝えることで、延期の困難さを間接的に示唆している。これは日本語の間接的コミュニケーションの典型例。\n\n正解はB。'
+},
+
+{
+  id:28, cat:'言語読解',
+  text:'次の文章で述べられていることとして正しいものはどれか。',
+  passage:'人工知能は囲碁や将棋で人間を超える棋力を示した。これは計算能力の高さによるものだが、AIが「理解」しているかどうかは別問題だ。膨大なパターンを学習したAIは最善手を導くが、なぜその手が良いかを言語で説明することは現在のAIには難しい。人間の棋士は対局後に「手の意味」を語るが、AIにはその能力が乏しい。',
+  options:[
+    {label:'A', text:'AIは将棋において人間より劣っている。'},
+    {label:'B', text:'AIは計算能力は高いが、思考を言語で説明する能力には限界がある。'},
+    {label:'C', text:'人間の棋士はAIより弱くなったため、対局後の解説ができなくなった。'},
+    {label:'D', text:'AIが強い理由は単純な計算能力ではなくパターン認識にある。'},
+    {label:'E', text:'現在のAIはすでに人間と同等の理解能力を持っている。'},
+  ],
+  answer:1,
+  explain:'文章の要旨：AIは高い棋力を持つが、なぜその手が良いかを説明することが難しい。これはBの「計算能力は高いが言語説明能力に限界がある」と一致。D「パターン認識」は部分的に正しいが、計算能力も言及されている。\n\n正解はB。'
+},
+
+{
+  id:29, cat:'言語読解',
+  text:'次の文の（　）に入る表現として最も自然なものを選べ。\n\n「長年の研究の末にようやく結果が出たとき、彼は（　）。」',
+  options:[
+    {label:'A', text:'涙を流して喜んだ'},
+    {label:'B', text:'怒りを感じた'},
+    {label:'C', text:'すぐに次の研究を始めた'},
+    {label:'D', text:'研究を諦めた'},
+    {label:'E', text:'結果に無関心であった'},
+  ],
+  answer:0,
+  explain:'「長年の研究の末にようやく」という前置きは、長期間の苦労と達成感を示す。最も自然な感情的反応はA（喜びの涙）。文脈上、B・D・Eは不自然。Cも文脈には沿うが感情表現として「喜んだ」の方が自然。\n\n正解はA。'
+},
+
+{
+  id:30, cat:'言語読解',
+  text:'次の文章の内容と一致するものを選べ。',
+  passage:'日本語の敬語体系は世界でも独特とされている。話し手と聞き手の社会的関係が、動詞の形自体を変化させる。英語でも「Please」や「Would you」などの丁寧表現があるが、文法構造の根本が変わるわけではない。日本語の場合、同じ「行く」という行為でも、主語が誰で、誰に向けて話すかによって「いらっしゃる」「参る」「いく」と全く異なる語彙を使い分ける必要がある。',
+  options:[
+    {label:'A', text:'英語には敬語表現が存在しない。'},
+    {label:'B', text:'日本語と英語の敬語は同じ原理に基づいている。'},
+    {label:'C', text:'日本語では社会的関係によって動詞の形や語彙が変化する。'},
+    {label:'D', text:'「いらっしゃる」「参る」「いく」はすべて同じ敬意レベルを示す。'},
+    {label:'E', text:'日本語の敬語は現代では使われなくなりつつある。'},
+  ],
+  answer:2,
+  explain:'文章に明示：「話し手と聞き手の社会的関係が動詞の形自体を変化させる」「主語と相手によって全く異なる語彙を使い分ける」→Cが正確に対応。Aは誤り（英語も丁寧表現あり）。\n\n正解はC。'
+},
+
+// ── 文章整序 (5問) ──────────────────────────────────────────
+
+{
+  id:31, cat:'文章整序',
+  text:'次の①〜⑤の文を意味が通るよう並べかえたとき、最も適切な順番を選べ。',
+  reorder:[
+    {num:'①', text:'この発見は後に、細菌感染症の治療に革命をもたらすことになる。'},
+    {num:'②', text:'フレミングはある日、カビに汚染されたシャーレの中で細菌が死滅していることに気づいた。'},
+    {num:'③', text:'1928年、アレクサンダー・フレミングはロンドンの研究室で偶然の発見をした。'},
+    {num:'④', text:'さらに研究を重ねた結果、そのカビがペニシリンという物質を産生していることが判明した。'},
+    {num:'⑤', text:'しかし当初、この発見は医学界からほとんど注目されなかった。'},
+  ],
+  options:[
+    {label:'A', text:'③→②→④→①→⑤'},
+    {label:'B', text:'②→③→④→①→⑤'},
+    {label:'C', text:'③→②→④→⑤→①'},
+    {label:'D', text:'①→③→②→④→⑤'},
+    {label:'E', text:'③→④→②→①→⑤'},
+  ],
+  answer:0,
+  explain:'時系列で整理：③（1928年、発見）→②（カビと細菌死滅を発見）→④（ペニシリン判明）→⑤（注目されず）→①（後に革命）。\n\n正解はA。'
+},
+
+{
+  id:32, cat:'文章整序',
+  text:'次の①〜⑤の文を意味が通るよう並べかえたとき、最も適切な順番を選べ。',
+  reorder:[
+    {num:'①', text:'ところが現代では、デジタル技術によって書物の複製と配布が格段に容易になった。'},
+    {num:'②', text:'そのため知識は、それを所有できる一部の人々の特権であった。'},
+    {num:'③', text:'古代において、書物は希少で高価なものであった。'},
+    {num:'④', text:'これにより、知識へのアクセスは大きく民主化された。'},
+    {num:'⑤', text:'一冊の本を作るには多大な労力と費用が必要とされた。'},
+  ],
+  options:[
+    {label:'A', text:'③→②→⑤→①→④'},
+    {label:'B', text:'③→⑤→②→①→④'},
+    {label:'C', text:'②→③→⑤→①→④'},
+    {label:'D', text:'③→①→⑤→②→④'},
+    {label:'E', text:'⑤→③→②→①→④'},
+  ],
+  answer:1,
+  explain:'③（書物は希少）→⑤（労力が必要）→②（一部の特権）→①（ところがデジタルで変化）→④（民主化）。\n「ところが」が③〜②の状況を受けての逆接として機能する。\n\n正解はB。'
+},
+
+{
+  id:33, cat:'文章整序',
+  text:'次の①〜⑤の文を意味が通るよう並べかえたとき、最も適切な順番を選べ。',
+  reorder:[
+    {num:'①', text:'この現象を「インフレーション」と呼ぶ。'},
+    {num:'②', text:'需要が供給を上回ると、売り手は価格を引き上げることができる。'},
+    {num:'③', text:'経済において、商品の価格は需要と供給のバランスによって決まる。'},
+    {num:'④', text:'逆に、供給が需要を上回ると価格は下がり、「デフレーション」が起こる。'},
+    {num:'⑤', text:'これが継続すると、物価全体が持続的に上昇する状態となる。'},
+  ],
+  options:[
+    {label:'A', text:'③→②→⑤→①→④'},
+    {label:'B', text:'②→③→①→⑤→④'},
+    {label:'C', text:'③→①→②→⑤→④'},
+    {label:'D', text:'①→③→②→④→⑤'},
+    {label:'E', text:'③→④→②→①→⑤'},
+  ],
+  answer:0,
+  explain:'③（価格は需要と供給で決まる）→②（需要>供給→価格上昇）→⑤（継続すると物価上昇）→①（これをインフレと呼ぶ）→④（逆の場合がデフレ）。\n\n正解はA。'
+},
+
+{
+  id:34, cat:'文章整序',
+  text:'次の①〜④の文を自然な流れになるよう並べかえよ。',
+  reorder:[
+    {num:'①', text:'その後、各国の協議を経て、現在の国際単位系（SI）が整備された。'},
+    {num:'②', text:'かつて長さの単位は国や地域によって異なり、貿易や科学における混乱を招いていた。'},
+    {num:'③', text:'19世紀にフランスが「メートル法」を提唱し、国際的な統一基準を目指す動きが始まった。'},
+    {num:'④', text:'今日では、科学分野ではほぼ世界共通の単位が使われるようになっている。'},
+  ],
+  options:[
+    {label:'A', text:'②→③→①→④'},
+    {label:'B', text:'③→②→①→④'},
+    {label:'C', text:'①→②→③→④'},
+    {label:'D', text:'②→①→③→④'},
+    {label:'E', text:'③→①→②→④'},
+  ],
+  answer:0,
+  explain:'②（かつて単位がバラバラ→問題）→③（19世紀にメートル法提唱）→①（その後SI整備）→④（現在では統一）という歴史的流れ。\n\n正解はA。'
+},
+
+{
+  id:35, cat:'文章整序',
+  text:'次の①〜⑤の文を意味が通るよう並べかえよ。',
+  reorder:[
+    {num:'①', text:'この問いへの答えは、経済学者によって様々である。'},
+    {num:'②', text:'一方、規制を緩和すれば民間の活力が生まれ、経済成長につながるという考え方もある。'},
+    {num:'③', text:'政府はどこまで市場に介入すべきか。'},
+    {num:'④', text:'市場の失敗を補正するため、政府の積極的な介入が必要だという立場がある。'},
+    {num:'⑤', text:'この議論は今なお続いており、政策立案の根本的な問題となっている。'},
+  ],
+  options:[
+    {label:'A', text:'③→①→④→②→⑤'},
+    {label:'B', text:'①→③→④→②→⑤'},
+    {label:'C', text:'③→④→②→①→⑤'},
+    {label:'D', text:'④→②→③→①→⑤'},
+    {label:'E', text:'③→①→②→④→⑤'},
+  ],
+  answer:0,
+  explain:'③（問い提示）→①（答えは様々）→④（一方の立場：介入必要）→②（もう一方：規制緩和）→⑤（議論は続く）。\n\n正解はA。'
+},
+
+// ── 論理推理 (5問) ──────────────────────────────────────────
+
+{
+  id:36, cat:'論理推理',
+  text:'「すべての猫は哺乳類である」「タマは猫である」から確実に言えることはどれか。',
+  options:[
+    {label:'A', text:'タマは犬ではない。'},
+    {label:'B', text:'タマは哺乳類である。'},
+    {label:'C', text:'すべての哺乳類は猫である。'},
+    {label:'D', text:'タマは魚を食べる。'},
+    {label:'E', text:'哺乳類はすべてペットになりうる。'},
+  ],
+  answer:1,
+  explain:'三段論法：「すべての猫→哺乳類」「タマ→猫」∴「タマ→哺乳類」。\nBが確実に導ける。A・D・Eは与えられた前提から演繹できない。Cは逆の誤謬。\n\n正解はB。'
+},
+
+{
+  id:37, cat:'論理推理',
+  text:'「P ならば Q」が真であるとき、必ず真であると言えるものはどれか。',
+  options:[
+    {label:'A', text:'Q ならば P'},
+    {label:'B', text:'P でなければ Q でない'},
+    {label:'C', text:'Q でなければ P でない'},
+    {label:'D', text:'P かつ Q'},
+    {label:'E', text:'P または Q でない'},
+  ],
+  answer:2,
+  explain:'「P→Q」が真のとき、必ず真なのはその対偶「¬Q→¬P」（QでなければPでない）。\nA（逆）：真とは限らない。B（裏）：真とは限らない。C（対偶）：必ず真（○）。\n\n正解はC。'
+},
+
+{
+  id:38, cat:'論理推理',
+  text:'A〜Eの5人が1列に並ぶ。条件は次の通り。AはBの隣ではない。CはDの右隣である。EはAより左にいる。このとき確実に言えることはどれか。',
+  options:[
+    {label:'A', text:'Eは1番左である。'},
+    {label:'B', text:'CDは3・4番目に並ぶ。'},
+    {label:'C', text:'BはAの右隣である。'},
+    {label:'D', text:'EはCより左にいる可能性がある。'},
+    {label:'E', text:'Aは必ず5番目（右端）である。'},
+  ],
+  answer:3,
+  explain:'条件：E < A（左から順）、C-D（隣接でCがDの左）、A-Bは隣でない。\nEはAより左：例えばE=1, A=3も可。CとEの関係は条件で直接指定されていない。\nE<Aの条件はあるが、CとEの関係は不定なのでEがCより左になる配置もある（例：E=1, C=2, D=3, A=4, B=...）。Dは「可能性がある」で正しい。\n\n正解はD。'
+},
+
+{
+  id:39, cat:'論理推理',
+  text:'「コーヒーを飲む人は眠れない」「眠れない人は翌日疲れる」が真だとすると、次のうち必ず真なものはどれか。',
+  options:[
+    {label:'A', text:'翌日疲れる人はコーヒーを飲んだ。'},
+    {label:'B', text:'コーヒーを飲まない人は眠れる。'},
+    {label:'C', text:'翌日疲れない人はコーヒーを飲まなかった。'},
+    {label:'D', text:'眠れる人は翌日疲れない。'},
+    {label:'E', text:'コーヒーを飲む人は必ず翌日疲れる。'},
+  ],
+  answer:4,
+  explain:'コーヒー→眠れない→疲れる。これを繋げると「コーヒー→疲れる」。\nC：対偶「疲れない→眠れる→コーヒーを飲まない」で真（○）。\nE：コーヒー→眠れない→疲れるも真（○）。\nA：逆の誤謬（×）。B：裏の誤謬（×）。D：「眠れる→疲れない」は与えられた命題から言えない（×）。\nEが最も直接的に導ける。\n\n正解はE。'
+},
+
+{
+  id:40, cat:'論理推理',
+  text:'X・Y・Zの3人の発言：X「Yが犯人だ」Y「Zが犯人だ」Z「私は犯人でない」。犯人は1人だけで、犯人のみが嘘をつく。犯人は誰か。',
+  options:[
+    {label:'A', text:'X'},
+    {label:'B', text:'Y'},
+    {label:'C', text:'Z'},
+    {label:'D', text:'XとY'},
+    {label:'E', text:'特定できない'},
+  ],
+  answer:0,
+  explain:'犯人は嘘をつき、他は真実を言う。\n\nXが犯人と仮定：Xの発言「Yが犯人」は嘘→Yは犯人でない（○）。Yの発言「Zが犯人」は真→Zが犯人？矛盾（Xが犯人のはず）。\n\nYが犯人と仮定：Yの発言「Zが犯人」は嘘→Zは犯人でない（○）。Xの発言「Yが犯人」は真（○）。Zの発言「私は犯人でない」は真（○）。矛盾なし。\n\nZが犯人と仮定：Zの発言「私は犯人でない」は嘘（○）。Yの発言「Zが犯人」は真（○）。Xの発言「Yが犯人」は真→Yも犯人？矛盾。\n\n犯人はY。正解はB。',
+  answer:1
+},
+
+];
+
+// ===== STATE =====
+let current = 0;
+let answers = new Array(questions.length).fill(null);
+let score = 0;
+let started = false;
+
+function startQuiz() {
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const total = questions.length;
+  
+  document.getElementById('q-counter').textContent = `問題 ${current+1} / ${total}`;
+  document.getElementById('q-score-top').textContent = `正解: ${score}`;
+  document.getElementById('progress-fill').style.width = `${(current/total)*100}%`;
+  
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  prevBtn.disabled = current === 0;
+  nextBtn.textContent = current === total-1 ? '結果を見る' : '次の問題 ▶';
+
+  let html = `<div class="q-card">
+    <div class="q-meta">
+      <span class="q-num">Q${current+1}</span>
+      <span class="q-category">${q.cat}</span>
+    </div>
+    <div class="q-text" style="white-space:pre-line">${q.text}</div>`;
+
+  if (q.table) {
+    html += `<table class="data-table"><thead><tr>`;
+    q.table.headers.forEach(h => html += `<th>${h}</th>`);
+    html += `</tr></thead><tbody>`;
+    q.table.rows.forEach(r => {
+      html += `<tr>`;
+      r.forEach((cell, i) => html += `<td class="${i===0?'row-header':''}">${cell}</td>`);
+      html += `</tr>`;
+    });
+    html += `</tbody></table>`;
+    if (q.sub) html += `<div class="q-sub">${q.sub}</div>`;
+  }
+  if (q.svg) {
+    html += `<div class="svg-wrap">${q.svg}</div>`;
+  }
+  if (q.passage) {
+    html += `<div class="passage">${q.passage.replace(/<u>/g,'<span class="underline">').replace(/<\/u>/g,'</span>')}</div>`;
+  }
+  if (q.reorder) {
+    html += `<div class="reorder-items">`;
+    q.reorder.forEach(r => html += `<p><strong>【${r.num}】</strong> ${r.text}</p>`);
+    html += `</div>`;
+  }
+  if (q.sub && !q.table) {
+    html += `<div class="q-sub">${q.sub}</div>`;
+  }
+
+  html += `<div class="options">`;
+  q.options.forEach((opt, i) => {
+    let cls = 'option-btn';
+    const userAns = answers[current];
+    if (userAns !== null) {
+      if (i === q.answer) cls += ' correct';
+      else if (i === userAns && userAns !== q.answer) cls += ' wrong';
+    } else if (userAns === i) {
+      cls += ' selected';
+    }
+    const disabled = userAns !== null ? 'disabled' : '';
+    html += `<button class="${cls}" ${disabled} onclick="selectAnswer(${i})">
+      <span class="opt-label">${opt.label}</span>
+      <span>${opt.text}</span>
+    </button>`;
+  });
+  html += `</div>`;
+
+  // feedback
+  if (answers[current] !== null) {
+    const correct = answers[current] === q.answer;
+    html += `<div class="feedback ${correct?'':'wrong-fb'} show">
+      <strong>${correct ? '✓ 正解' : '✗ 不正解'}</strong>（正解：${q.options[q.answer].label}）<br><br>
+      <span style="white-space:pre-line;font-size:0.85rem">${q.explain}</span>
+    </div>`;
+  }
+
+  html += `</div>`;
+  document.getElementById('question-area').innerHTML = html;
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function selectAnswer(i) {
+  if (answers[current] !== null) return;
+  answers[current] = i;
+  if (i === questions[current].answer) score++;
+  document.getElementById('q-score-top').textContent = `正解: ${score}`;
+  renderQuestion();
+}
+
+function nextQ() {
+  if (current < questions.length - 1) {
+    current++;
+    renderQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function prevQ() {
+  if (current > 0) {
+    current--;
+    renderQuestion();
+  }
+}
+
+function showResult() {
+  document.getElementById('quiz-screen').classList.add('hidden');
+  document.getElementById('result-screen').classList.remove('hidden');
+  
+  const total = questions.length;
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-total').textContent = `/ ${total}`;
+  
+  const pct = Math.round(score/total*100);
+  let comment = '';
+  if (pct >= 90) comment = '優秀：全農サイロ、盤石です。';
+  else if (pct >= 75) comment = '良好：本番でも十分通用する水準です。';
+  else if (pct >= 60) comment = '標準：あと一歩。解説を確認して弱点を潰しましょう。';
+  else comment = '要復習：解説を丁寧に読み返して、次は改善を目指しましょう。';
+  document.getElementById('final-comment').textContent = comment;
+
+  // breakdown by category
+  const cats = {};
+  questions.forEach((q, i) => {
+    if (!cats[q.cat]) cats[q.cat] = {correct:0, total:0};
+    cats[q.cat].total++;
+    if (answers[i] === q.answer) cats[q.cat].correct++;
+  });
+  let bd = '';
+  Object.entries(cats).forEach(([cat, s]) => {
+    bd += `<div class="breakdown-item">
+      <div class="cat">${cat}</div>
+      <div class="score">${s.correct} / ${s.total}</div>
+    </div>`;
+  });
+  document.getElementById('result-breakdown').innerHTML = bd;
+}
+
+function restartQuiz() {
+  current = 0;
+  answers = new Array(questions.length).fill(null);
+  score = 0;
+  document.getElementById('result-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+  renderQuestion();
+}
+</script>
+</body>
+</html>
