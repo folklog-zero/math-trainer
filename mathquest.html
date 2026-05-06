@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MathQuest — 数学学習アプリ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Outfit:wght@600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:    #2ECC8A;
+    --green-lt: #E8FAF3;
+    --green-dk: #1a9e68;
+    --red:      #FF5C5C;
+    --red-lt:   #FFF0F0;
+    --amber:    #FFB020;
+    --amber-lt: #FFF8E6;
+    --blue:     #4A90E2;
+    --blue-lt:  #EEF5FF;
+    --ink:      #1A1F2E;
+    --ink2:     #4A5068;
+    --ink3:     #8892A4;
+    --bg:       #F4F6FB;
+    --surface:  #FFFFFF;
+    --border:   #E2E7F0;
+    --radius:   14px;
+    --radius-sm:9px;
+    --shadow:   0 2px 12px rgba(26,31,46,.07);
+    --shadow-md:0 6px 24px rgba(26,31,46,.11);
+  }
+
+  html { font-size: 16px; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  /* ── Layout ─────────────────────────────── */
+  #app {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* ── Brand header ────────────────────────── */
+  .brand {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+  .brand-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.9rem;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -.02em;
+  }
+  .brand-title span { color: var(--green); }
+  .brand-sub {
+    font-size: .8rem;
+    color: var(--ink3);
+    margin-top: 2px;
+    letter-spacing: .04em;
+  }
+
+  /* ── HUD ─────────────────────────────────── */
+  .hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: .65rem 1.1rem;
+    margin-bottom: .75rem;
+    box-shadow: var(--shadow);
+  }
+  .hud-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .8rem;
+    color: var(--ink3);
+    font-weight: 500;
+  }
+  .hud-item .icon { font-size: 1.1rem; }
+  .hud-val { font-size: 1.1rem; font-weight: 700; color: var(--ink); }
+  .hud-lives { display: flex; gap: 3px; }
+
+  /* ── XP bar ──────────────────────────────── */
+  .xp-wrap {
+    background: var(--border);
+    border-radius: 99px;
+    height: 7px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--green), #5DE8B0);
+    transition: width .45s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── Card ────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.4rem;
+    margin-bottom: .85rem;
+    box-shadow: var(--shadow);
+  }
+
+  /* ── Topic grid ──────────────────────────── */
+  .section-label {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--ink3);
+    text-transform: uppercase;
+    margin-bottom: .85rem;
+  }
+  .topic-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .topic-btn {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: .85rem .5rem .7rem;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .15s, background .15s, transform .1s, box-shadow .15s;
+  }
+  .topic-btn:hover {
+    border-color: var(--green);
+    background: var(--green-lt);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(46,204,138,.15);
+  }
+  .topic-btn:active { transform: scale(.96); }
+  .topic-icon { font-size: 1.4rem; color: var(--green-dk); margin-bottom: 5px; }
+  .topic-name { font-size: .78rem; font-weight: 700; color: var(--ink); }
+  .topic-level { font-size: .68rem; color: var(--ink3); margin-top: 2px; }
+
+  /* ── Stats ───────────────────────────────── */
+  .stat-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: .85rem;
+  }
+  .stat-box {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: .75rem 1rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-label { font-size: .72rem; color: var(--ink3); font-weight: 500; }
+  .stat-val { font-size: 1.55rem; font-weight: 700; color: var(--ink); margin-top: 1px; }
+
+  /* ── Badge ───────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: 3px 10px;
+    border-radius: 99px;
+    background: var(--green-lt);
+    color: var(--green-dk);
+    margin-bottom: .9rem;
+  }
+
+  /* ── Question text ───────────────────────── */
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.7;
+    margin-bottom: 1.25rem;
+  }
+
+  /* ── Options grid ────────────────────────── */
+  .opts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+  }
+  .opt-btn {
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: .8rem .7rem;
+    font-size: .9rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .12s, background .12s, transform .1s;
+    font-weight: 500;
+  }
+  .opt-btn:hover:not(:disabled) {
+    border-color: var(--blue);
+    background: var(--blue-lt);
+  }
+  .opt-btn:active:not(:disabled) { transform: scale(.96); }
+  .opt-btn.ok  { background: var(--green-lt); border-color: var(--green); color: var(--green-dk); }
+  .opt-btn.ng  { background: var(--red-lt);   border-color: var(--red);   color: #c0392b; }
+  .opt-btn.rev { background: var(--green-lt); border-color: var(--green); color: var(--green-dk); opacity: .65; }
+
+  /* ── Input ───────────────────────────────── */
+  .i-row { display: flex; gap: 8px; }
+  .i-text {
+    flex: 1;
+    font-size: 1rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: .65rem .9rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--ink);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .i-text:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(46,204,138,.18);
+    background: #fff;
+  }
+  .i-sub {
+    padding: .65rem 1.2rem;
+    background: var(--green);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: background .12s, transform .1s;
+  }
+  .i-sub:hover { background: var(--green-dk); }
+  .i-sub:active { transform: scale(.95); }
+
+  /* ── Feedback ────────────────────────────── */
+  .fb {
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.1rem;
+    margin-bottom: .85rem;
+    border-left: 4px solid;
+  }
+  .fb.ok { background: var(--green-lt); border-color: var(--green); }
+  .fb.ng { background: var(--red-lt);   border-color: var(--red); }
+  .fb-title {
+    font-size: .9rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .fb.ok .fb-title { color: var(--green-dk); }
+  .fb.ng .fb-title { color: #c0392b; }
+  .fb-body { font-size: .83rem; line-height: 1.75; }
+  .fb.ok .fb-body { color: #1a7a4a; }
+  .fb.ng .fb-body { color: #a02020; }
+
+  /* ── Buttons ─────────────────────────────── */
+  .btn-next {
+    width: 100%;
+    padding: .85rem;
+    background: var(--green);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background .12s, transform .1s, box-shadow .12s;
+    box-shadow: 0 3px 10px rgba(46,204,138,.3);
+  }
+  .btn-next:hover { background: var(--green-dk); box-shadow: 0 4px 14px rgba(46,204,138,.35); }
+  .btn-next:active { transform: scale(.97); }
+  .btn-back {
+    background: none;
+    border: none;
+    color: var(--ink3);
+    font-size: .78rem;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    padding: 3px 0;
+    margin-top: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    transition: color .12s;
+  }
+  .btn-back:hover { color: var(--ink); }
+
+  /* ── Game over ───────────────────────────── */
+  .gameover-card {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+  }
+  .go-emoji { font-size: 3rem; margin-bottom: .75rem; }
+  .go-title { font-size: 1.4rem; font-weight: 700; margin-bottom: .4rem; }
+  .go-sub { font-size: .85rem; color: var(--ink3); margin-bottom: 1.5rem; }
+  .btn-retry {
+    padding: .75rem 2rem;
+    background: var(--ink);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 700;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .btn-retry:hover { background: var(--ink2); }
+
+  /* ── Shimmer loading ─────────────────────── */
+  .loading {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--ink3);
+    font-size: .88rem;
+  }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin .75s linear infinite;
+    margin: 0 auto .75rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="brand">
+    <div class="brand-title">Math<span>Quest</span></div>
+    <div class="brand-sub">中学〜高校数学 学習アプリ</div>
+  </div>
+
+  <div class="hud">
+    <div class="hud-item">
+      <span class="icon">🔥</span>
+      <span class="hud-val" id="sc">0</span>
+      <span>連続正解</span>
+    </div>
+    <div class="hud-lives" id="hrt"></div>
+    <div class="hud-item">
+      <span class="icon">⭐</span>
+      <span class="hud-val" id="xc">0</span>
+      <span>XP</span>
+    </div>
+  </div>
+  <div class="xp-wrap"><div class="xp-fill" id="xb" style="width:0%"></div></div>
+
+  <div id="mn"></div>
+</div>
+
+<script>
+const r = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const nonzero = () => { let v; do { v=r(-9,9); } while(v===0); return v; };
+const pick = arr => arr[r(0,arr.length-1)];
+const shuffle = a => [...a].sort(()=>Math.random()-.5);
+const factorial = n => n<=1?1:n*factorial(n-1);
+const gcd = (a,b) => b===0?a:gcd(b,a%b);
+function countDiceSum(s){let c=0;for(let i=1;i<=6;i++)for(let j=1;j<=6;j++)if(i+j===s)c++;return c;}
+
+const TOPICS = [
+  {id:'linear',    name:'一次方程式',   level:'中学',       icon:'➗'},
+  {id:'quadratic', name:'二次方程式',   level:'中学〜高校', icon:'📈'},
+  {id:'function',  name:'関数・グラフ', level:'中学〜高校', icon:'📉'},
+  {id:'trig',      name:'三角関数',     level:'高校',       icon:'〰️'},
+  {id:'calc',      name:'微分・積分',   level:'高校',       icon:'∫'},
+  {id:'prob',      name:'確率・統計',   level:'高校',       icon:'🎲'},
+];
+
+const GEN = {
+  linear: [
+    () => {
+      const a=nonzero(), b=r(-10,10), c=r(-10,10);
+      const ans=(c-b)/a;
+      if(!Number.isInteger(ans)) return GEN.linear[0]();
+      const bStr = b>=0 ? `+ ${b}` : `- ${Math.abs(b)}`;
+      return {type:'input', q:`<b>${a}x ${bStr} = ${c}</b> を解きなさい。`, ans:`${ans}`,
+        expl:`両辺から ${b} を引くと ${a}x = ${c-b}。両辺を ${a} で割ると x = ${ans}。`};
+    },
+    () => {
+      const a=r(2,9), b=nonzero(), c=r(2,9), d=r(-10,10);
+      const num=d-b, den=a-c;
+      if(den===0||num%den!==0) return GEN.linear[1]();
+      const ans=num/den;
+      const bStr=b>=0?`+ ${b}`:`- ${Math.abs(b)}`;
+      const dStr=d>=0?`+ ${d}`:`- ${Math.abs(d)}`;
+      return {type:'input', q:`<b>${a}x ${bStr} = ${c}x ${dStr}</b> を解きなさい。`, ans:`${ans}`,
+        expl:`xを左辺に移項すると (${a}-${c})x = ${d}-${b}、つまり ${den}x = ${num}。よって x = ${ans}。`};
+    },
+    () => {
+      const a=nonzero(), b=r(-5,5);
+      const x0=r(-5,5);
+      const y=a*x0+b;
+      const bStr=b>=0?`+ ${b}`:`- ${Math.abs(b)}`;
+      return {type:'input', q:`y = ${a}x ${bStr} で y = ${y} のとき、x の値は？`, ans:`${x0}`,
+        expl:`${y} = ${a}x ${bStr} を解く。${a}x = ${y-b}、x = ${x0}。`};
+    },
+  ],
+  quadratic: [
+    () => {
+      const p=r(1,8), q2=r(1,8);
+      const b=-(p+q2), c=p*q2;
+      const bStr=b>=0?`+ ${b}x`:(b===-1?`- x`:`${b}x`);
+      const cStr=c>=0?`+ ${c}`:`${c}`;
+      const correct=`x = ${p} または ${q2}`;
+      const opts=shuffle([correct, `x = ${-p} または ${-q2}`, `x = ${p+q2} または ${p*q2}`, `x = ${p} または ${-q2}`]);
+      return {type:'mcq', q:`<b>x² ${bStr} ${cStr} = 0</b> の解はどれか？`, opts, ans:correct,
+        expl:`因数分解すると (x - ${p})(x - ${q2}) = 0。よって x = ${p} または x = ${q2}。`};
+    },
+    () => {
+      const p=nonzero(), q2=nonzero();
+      const b=-(p+q2), c=p*q2;
+      const bStr=b>=0?`+ ${b}x`:(b===0?'':`${b}x`);
+      const cStr=c>=0?`+ ${c}`:(c===0?'':`${c}`);
+      return {type:'input', q:`<b>x² ${bStr} ${cStr} = 0</b> を解きなさい。<br><small>大きい方の解を入力（小数点は使わない）</small>`, ans:`${Math.max(p,q2)}`,
+        expl:`(x - ${p})(x - ${q2}) = 0 と因数分解。x = ${p} または x = ${q2}。大きい方は ${Math.max(p,q2)}。`};
+    },
+    () => {
+      const b=r(-6,6)*2, c=r(-10,10);
+      const D=b*b-4*c;
+      if(D<0||D>144) return GEN.quadratic[2]();
+      const sqD=Math.sqrt(D);
+      if(!Number.isInteger(sqD)) return GEN.quadratic[2]();
+      const x1=(-b+sqD)/2, x2=(-b-sqD)/2;
+      const bStr=b>=0?`+ ${b}x`:(b===0?'':`${b}x`);
+      const cStr=c>=0?`+ ${c}`:(c===0?'':`${c}`);
+      return {type:'input', q:`解の公式を使って <b>x² ${bStr} ${cStr} = 0</b> を解きなさい。<br><small>大きい方の解を入力</small>`, ans:`${Math.max(x1,x2)}`,
+        expl:`判別式 D = ${b}² - 4×${c} = ${D}。√D = ${sqD}。x = (-${b} ± ${sqD}) / 2。大きい方 = ${Math.max(x1,x2)}。`};
+    },
+  ],
+  function: [
+    () => {
+      const m=nonzero(), b=r(-6,6);
+      const x0=r(1,6);
+      const y=m*x0+b;
+      const bStr=b>=0?`+ ${b}`:`- ${Math.abs(b)}`;
+      return {type:'input', q:`一次関数 <b>y = ${m}x ${bStr}</b> において、x = ${x0} のとき y は？`, ans:`${y}`,
+        expl:`y = ${m}×${x0} ${bStr} = ${m*x0} ${bStr} = ${y}。`};
+    },
+    () => {
+      const m=nonzero(), b=r(-8,8);
+      const bStr=b>=0?`+ ${b}`:`- ${Math.abs(b)}`;
+      const correct=`y = ${m}x ${bStr}`;
+      const opts=shuffle([correct, `y = ${-m}x ${bStr}`, `y = ${m}x ${b>=0?`+ ${b+1}`:`- ${Math.abs(b)+1}`}`, `y = ${m+1}x ${bStr}`]);
+      return {type:'mcq', q:`傾き <b>${m}</b>、切片 <b>${b}</b> の一次関数の式はどれか？`, opts, ans:correct,
+        expl:`y = ax + b の a が傾き、b が切片。よって y = ${m}x ${bStr}。`};
+    },
+    () => {
+      const a=nonzero(), b=r(-6,6), c=nonzero(), d=r(-6,6);
+      const den=a-c;
+      if(den===0) return GEN.function[2]();
+      const x=(d-b)/den;
+      if(!Number.isInteger(x)||Math.abs(x)>20) return GEN.function[2]();
+      const bStr=b>=0?`+ ${b}`:`- ${Math.abs(b)}`;
+      const dStr=d>=0?`+ ${d}`:`- ${Math.abs(d)}`;
+      return {type:'input', q:`<b>y = ${a}x ${bStr}</b> と <b>y = ${c}x ${dStr}</b> の交点の x 座標は？`, ans:`${x}`,
+        expl:`${a}x ${bStr} = ${c}x ${dStr} を解く。${den}x = ${d-b}、x = ${x}。`};
+    },
+  ],
+  trig: [
+    () => {
+      const cases=[
+        {deg:0,  sin:'0',     cos:'1',     tan:'0'},
+        {deg:30, sin:'1/2',   cos:'√3/2',  tan:'1/√3'},
+        {deg:45, sin:'√2/2',  cos:'√2/2',  tan:'1'},
+        {deg:60, sin:'√3/2',  cos:'1/2',   tan:'√3'},
+        {deg:90, sin:'1',     cos:'0',     tan:'なし'},
+      ];
+      const c=pick(cases);
+      const fn=pick(['sin','cos']);
+      const correct=fn==='sin'?c.sin:c.cos;
+      const pool=[...new Set(cases.map(x=>fn==='sin'?x.sin:x.cos))].filter(v=>v!==correct);
+      const opts=shuffle([correct,...shuffle(pool).slice(0,3)]);
+      return {type:'mcq', q:`<b>${fn} ${c.deg}°</b> の値はどれか？`, opts, ans:correct,
+        expl:`${fn} ${c.deg}° = ${correct}。三角比の基本値として覚えておこう。`};
+    },
+    () => {
+      const A=r(20,70), B=r(20,70);
+      if(A+B>=90) return GEN.trig[1]();
+      const C=180-A-B;
+      return {type:'input', q:`三角形の内角 A = ${A}°、B = ${B}° のとき、残りの角 C は何度か？`, ans:`${C}`,
+        expl:`三角形の内角の和は 180°。C = 180 - ${A} - ${B} = ${C}°。`};
+    },
+    () => {
+      const items=[
+        {q:'sin²θ + cos²θ', a:'1',          expl:'ピタゴラスの定理から導かれる最重要恒等式。'},
+        {q:'tanθ',          a:'sinθ/cosθ',   expl:'tanθ の定義そのもの。'},
+        {q:'1 + tan²θ',     a:'1/cos²θ',    expl:'sin²θ + cos²θ = 1 を cos²θ で割ると得られる。'},
+      ];
+      const item=pick(items);
+      const wrongs=['0','2','sinθ×cosθ','cosθ/sinθ','1/sinθ'].filter(w=>w!==item.a);
+      const opts=shuffle([item.a,...shuffle(wrongs).slice(0,3)]);
+      return {type:'mcq', q:`三角関数の恒等式: <b>${item.q} = ?</b>`, opts, ans:item.a, expl:item.expl};
+    },
+  ],
+  calc: [
+    () => {
+      const n=r(2,5), a=nonzero();
+      const ans=`${n*a}x^${n-1}`;
+      const opts=shuffle([ans, `${a}x^${n}`, `${n}x^${n-1}`, `${a*(n-1)}x^${n-2}`]);
+      const uniq=[...new Set(opts)];
+      return {type:'mcq', q:`<b>f(x) = ${a}x<sup>${n}</sup></b> の導関数 f'(x) はどれか？`, opts:uniq.slice(0,4), ans,
+        expl:`べき乗の微分: (ax^n)' = nax^(n-1)。よって (${a}x^${n})' = ${n*a}x^${n-1}。`};
+    },
+    () => {
+      const a=r(1,5), n=r(2,4);
+      const num=a, den=n+1;
+      const g=gcd(num,den);
+      const ans=num/g===1&&den/g===1?'1':(den/g===1?`${num/g}`:`${num/g}/${den/g}`);
+      return {type:'input', q:`<b>∫₀¹ ${a}x<sup>${n}</sup> dx</b> を計算しなさい。<br><small>分数の場合は「分子/分母」の形で</small>`, ans,
+        expl:`∫${a}x^${n}dx = ${a}x^${n+1}/${den}。[0,1]で計算すると ${a}/${den} = ${ans}。`};
+    },
+    () => {
+      const a=r(1,6), b=r(0,5), c=r(0,5);
+      const f=`${a}x² ${b>0?`+ ${b}x`:''} ${c>0?`+ ${c}`:''}`.trim();
+      return {type:'input', q:`<b>f(x) = ${f}</b> のとき、f'(x) を求めなさい。<br><small>例: 3x+2 の形で入力（定数のみなら数字のみ）</small>`, ans:`${2*a}x${b>0?`+${b}`:''}`,
+        expl:`各項を微分。${a}x² → ${2*a}x、${b}x → ${b}、定数 ${c} → 0。よって f'(x) = ${2*a}x${b>0?` + ${b}`:''}。`};
+    },
+  ],
+  prob: [
+    () => {
+      const n=r(3,6), k=r(1,n-1);
+      const ans=factorial(n)/(factorial(k)*factorial(n-k));
+      return {type:'input', q:`${n}人の中から ${k}人を選ぶ組み合わせ <b>C(${n}, ${k})</b> の値は？`, ans:`${ans}`,
+        expl:`C(n,k) = n! / (k!(n-k)!)。C(${n},${k}) = ${n}! / (${k}!×${n-k}!) = ${ans}。`};
+    },
+    () => {
+      const s=r(2,12);
+      const count=countDiceSum(s);
+      const g=gcd(count,36);
+      const ans=`${count/g}/${36/g}`;
+      return {type:'input', q:`さいころを2個投げたとき、出た目の和が <b>${s}</b> になる確率は？<br><small>既約分数で「分子/分母」の形で入力</small>`, ans,
+        expl:`全36通り中、和が${s}になる組み合わせは${count}通り。確率 = ${count}/36 = ${ans}。`};
+    },
+    () => {
+      const n=r(3,6), k=r(1,n-1);
+      const ans=factorial(n)/(factorial(n-k));
+      return {type:'input', q:`${n}人を一列に並べるとき、${k}人を選んで並べる順列 <b>P(${n}, ${k})</b> の値は？`, ans:`${ans}`,
+        expl:`P(n,k) = n!/(n-k)!。P(${n},${k}) = ${n}!/${n-k}! = ${ans}。`};
+    },
+  ],
+};
+
+const S = { xp:0, streak:0, lives:3, total:0, topic:null, q:null, answered:false };
+
+function hud() {
+  document.getElementById('xc').textContent = S.xp;
+  document.getElementById('sc').textContent = S.streak;
+  document.getElementById('xb').style.width = (S.xp % 100) + '%';
+  document.getElementById('hrt').innerHTML = [0,1,2].map(i =>
+    `<span style="font-size:1.2rem;opacity:${i<S.lives?1:.25}">❤️</span>`).join('');
+}
+
+function mn() { return document.getElementById('mn'); }
+
+function showHome() {
+  S.topic=null; S.q=null; S.answered=false;
+  mn().innerHTML = `
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-label">総 XP</div><div class="stat-val">${S.xp}</div></div>
+      <div class="stat-box"><div class="stat-label">回答数</div><div class="stat-val">${S.total}</div></div>
+    </div>
+    <div class="card">
+      <div class="section-label">単元を選ぶ</div>
+      <div class="topic-grid">
+        ${TOPICS.map(t => `
+          <button class="topic-btn" onclick="startTopic('${t.id}')">
+            <div class="topic-icon">${t.icon}</div>
+            <div class="topic-name">${t.name}</div>
+            <div class="topic-level">${t.level}</div>
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function startTopic(id) { S.topic=id; nextQ(); }
+
+function nextQ() {
+  if (S.lives <= 0) { showGO(); return; }
+  S.answered = false;
+  const gens = GEN[S.topic];
+  let q;
+  for (let i=0; i<10; i++) { try { q=pick(gens)(); if(q) break; } catch(e){} }
+  if (!q) return;
+  S.q = q;
+  showQ();
+}
+
+function showQ() {
+  const q = S.q;
+  const t = TOPICS.find(x=>x.id===S.topic);
+  const inp = q.type==='mcq'
+    ? `<div class="opts">${q.opts.map((o,i)=>`<button class="opt-btn" id="o${i}" onclick="checkMCQ(${i})">${o}</button>`).join('')}</div>`
+    : `<div class="i-row"><input class="i-text" id="ain" type="text" placeholder="答えを入力…" onkeydown="if(event.key==='Enter')checkInp()"><button class="i-sub" onclick="checkInp()">確認 →</button></div>`;
+  mn().innerHTML = `
+    <div class="card">
+      <div class="badge">${t.icon} ${t.name} <span style="opacity:.6;font-weight:400">/ ${t.level}</span></div>
+      <div class="q-text">${q.q}</div>
+      ${inp}
+    </div>
+    <div id="fb"></div>
+    <button class="btn-back" onclick="showHome()">← 単元選択に戻る</button>`;
+  const ai = document.getElementById('ain');
+  if (ai) ai.focus();
+}
+
+function applyResult(ok) {
+  S.answered=true; S.total++;
+  if (ok) { S.xp+=10; S.streak++; }
+  else { S.streak=0; S.lives=Math.max(0,S.lives-1); }
+  hud();
+  const q = S.q;
+  document.getElementById('fb').innerHTML = `
+    <div class="fb ${ok?'ok':'ng'}">
+      <div class="fb-title">${ok ? '✓ 正解！ +10 XP' : `✗ 不正解（正解: ${q.ans}）`}</div>
+      <div class="fb-body">${q.expl}</div>
+    </div>
+    <button class="btn-next" onclick="nextQ()">次の問題へ →</button>`;
+}
+
+function checkMCQ(idx) {
+  if (S.answered) return;
+  const q = S.q;
+  const ok = q.opts[idx]===q.ans;
+  q.opts.forEach((_,i) => {
+    const b=document.getElementById('o'+i);
+    if (!b) return;
+    b.disabled=true;
+    if (q.opts[i]===q.ans) b.className='opt-btn '+(i===idx?'ok':'rev');
+    else if (i===idx) b.className='opt-btn ng';
+  });
+  applyResult(ok);
+}
+
+function checkInp() {
+  if (S.answered) return;
+  const el=document.getElementById('ain');
+  if (!el||el.value.trim()==='') return;
+  const u=el.value.trim().replace(/\s/g,'');
+  const a=String(S.q.ans).trim().replace(/\s/g,'');
+  const ok=u===a||(!isNaN(parseFloat(u))&&!isNaN(parseFloat(a))&&Math.abs(parseFloat(u)-parseFloat(a))<0.01);
+  el.disabled=true;
+  applyResult(ok);
+}
+
+function showGO() {
+  mn().innerHTML = `
+    <div class="card gameover-card">
+      <div class="go-emoji">💔</div>
+      <div class="go-title">ゲームオーバー</div>
+      <div class="go-sub">獲得 XP: ${S.xp} ／ 回答: ${S.total} 問</div>
+      <button class="btn-retry" onclick="resetGame()">もう一度チャレンジ</button>
+    </div>`;
+}
+
+function resetGame() { Object.assign(S,{xp:0,streak:0,lives:3,total:0}); hud(); showHome(); }
+
+showHome();
+hud();
+</script>
+</body>
+</html>
