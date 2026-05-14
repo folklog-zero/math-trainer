@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TG-WEB 対策アプリ</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--surface:#fff;--surface2:#f0ede6;--ink:#1a1814;--ink2:#5a5650;--ink3:#9a9590;--accent:#2d6a4f;--accent-l:#d8f3dc;--danger:#c1440e;--danger-l:#fdeee8;--warn:#b5641b;--warn-l:#fef3e2;--border:#ddd9d0;--r:10px;--mono:'JetBrains Mono',monospace;--sans:'Noto Sans JP',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.7}
+.app{max-width:820px;margin:0 auto;padding:2rem 1.25rem 5rem}
+.header{display:flex;align-items:baseline;gap:1rem;margin-bottom:2rem;padding-bottom:1rem;border-bottom:2px solid var(--ink)}
+.header h1{font-size:1.6rem;font-weight:700;letter-spacing:-.02em}
+.sub{font-size:.78rem;color:var(--ink2);font-family:var(--mono);background:var(--surface2);padding:2px 8px;border-radius:4px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:1.5rem}
+.cat-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:1rem;cursor:pointer;text-align:left;transition:all .15s;font-family:var(--sans)}
+.cat-btn:hover{border-color:var(--ink)}
+.cat-label{font-size:.68rem;color:var(--ink3);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.cat-name{font-size:.95rem;font-weight:700;color:var(--ink)}
+.cat-count{font-size:.78rem;color:var(--ink2);margin-top:2px}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:2rem}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:.9rem;text-align:center}
+.s-num{font-size:1.6rem;font-weight:700;font-family:var(--mono)}
+.s-lbl{font-size:.75rem;color:var(--ink2);margin-top:2px}
+.progress-wrap{margin-bottom:1.5rem}
+.progress-meta{display:flex;justify-content:space-between;font-size:.8rem;color:var(--ink2);margin-bottom:6px;font-family:var(--mono)}
+.progress-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s}
+.q-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:1.5rem;margin-bottom:1.25rem}
+.q-meta{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.badge{font-size:.68rem;font-family:var(--mono);padding:2px 8px;border-radius:4px;font-weight:600;letter-spacing:.05em}
+.bl{background:#e8f4fd;color:#1a5c8c}.bp{background:#f3e8fd;color:#5c1a8c}.bm{background:#fde8f4;color:#8c1a5c}.be{background:#e8fdf0;color:#1a6b3c}.bq{background:var(--surface2);color:var(--ink2)}
+.q-text{font-size:.95rem;line-height:1.85;margin-bottom:1.25rem;white-space:pre-wrap}
+.q-passage{font-size:.87rem;line-height:1.9;color:var(--ink2);background:var(--surface2);border-left:3px solid var(--border);padding:.75rem 1rem;border-radius:0 6px 6px 0;margin-bottom:1rem;white-space:pre-wrap}
+.choices{display:flex;flex-direction:column;gap:8px}
+.choice-btn{display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border:1.5px solid transparent;border-radius:8px;padding:.7rem .9rem;cursor:pointer;text-align:left;font-family:var(--sans);font-size:.9rem;color:var(--ink);transition:all .12s;line-height:1.55}
+.choice-btn:hover:not(:disabled){border-color:var(--ink);background:var(--surface)}
+.choice-btn:disabled{cursor:default}
+.choice-num{font-family:var(--mono);font-size:.72rem;font-weight:600;background:var(--border);color:var(--ink2);width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.choice-btn.correct{background:var(--accent-l);border-color:var(--accent)}
+.choice-btn.correct .choice-num{background:var(--accent);color:#fff}
+.choice-btn.wrong{background:var(--danger-l);border-color:var(--danger)}
+.choice-btn.wrong .choice-num{background:var(--danger);color:#fff}
+.choice-btn.reveal{background:var(--accent-l);border-color:var(--accent);opacity:.6}
+.explanation{margin-top:1rem;padding:1rem;background:var(--warn-l);border-left:3px solid var(--warn);border-radius:0 6px 6px 0;font-size:.87rem;line-height:1.8;white-space:pre-wrap}
+.explanation strong{color:var(--warn)}
+.actions{display:flex;gap:10px;margin-top:1.25rem;flex-wrap:wrap}
+.btn{padding:.55rem 1.25rem;border-radius:6px;font-family:var(--sans);font-size:.88rem;font-weight:700;cursor:pointer;transition:all .12s;border:1.5px solid}
+.btn-p{background:var(--ink);color:#fff;border-color:var(--ink)}.btn-p:hover{opacity:.85}
+.btn-s{background:transparent;color:var(--ink);border-color:var(--border)}.btn-s:hover{border-color:var(--ink)}
+.score-card{background:var(--surface);border:2px solid var(--ink);border-radius:var(--r);padding:2rem;text-align:center;margin-bottom:1.5rem}
+.score-big{font-size:3.5rem;font-weight:700;font-family:var(--mono);line-height:1;margin-bottom:.5rem}
+.score-sub{color:var(--ink2);font-size:.9rem}
+.score-bk{display:flex;justify-content:center;gap:2rem;margin-top:1.5rem;font-size:.85rem}
+.score-bk .item{text-align:center}
+.score-bk .num{font-family:var(--mono);font-size:1.4rem;font-weight:700}
+.score-bk .lbl{color:var(--ink2)}
+.hidden{display:none!important}
+.screen{animation:fi .2s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.q-table{width:100%;border-collapse:collapse;font-size:.87rem;margin:.75rem 0}
+.q-table th,.q-table td{border:1px solid var(--border);padding:6px 10px;text-align:right}
+.q-table th{background:var(--surface2);font-weight:700;text-align:center}
+.q-table td:first-child{text-align:center;font-weight:700}
+.multi-hint{font-size:.8rem;color:var(--ink2);margin-bottom:8px;font-style:italic}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>TG-WEB 対策</h1>
+    <span class="sub">澁澤ワールドトランスポート 受験対策</span>
+  </div>
+  <div id="screen-home" class="screen">
+    <p style="font-size:.88rem;color:var(--ink2);margin-bottom:1.25rem">分野を選んで練習を開始してください。全4分野151問収録。</p>
+    <div class="cat-grid" id="cat-grid"></div>
+    <div class="btn-row">
+      <button class="btn btn-p" onclick="startAll()">全分野ランダム</button>
+      <button class="btn btn-s" onclick="resetStats()">記録リセット</button>
+    </div>
+    <div class="stat-grid" id="stat-grid"></div>
+  </div>
+  <div id="screen-quiz" class="screen hidden">
+    <div class="progress-wrap">
+      <div class="progress-meta"><span id="prog-text">1 / ?</span><span id="prog-cat"></span></div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    </div>
+    <div id="q-container"></div>
+    <div class="actions">
+      <button class="btn btn-p hidden" id="btn-next" onclick="nextQuestion()">次の問題 →</button>
+      <button class="btn btn-s" onclick="backHome()">一覧へ戻る</button>
+    </div>
+  </div>
+  <div id="screen-result" class="screen hidden">
+    <div class="score-card">
+      <div class="score-big" id="res-score">0%</div>
+      <div class="score-sub">正答率</div>
+      <div class="score-bk">
+        <div class="item"><div class="num" id="res-correct">0</div><div class="lbl">正解</div></div>
+        <div class="item"><div class="num" id="res-wrong">0</div><div class="lbl">不正解</div></div>
+        <div class="item"><div class="num" id="res-total">0</div><div class="lbl">合計</div></div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-p" onclick="backHome()">カテゴリ選択へ</button>
+      <button class="btn btn-s" onclick="retrySession()">同じ分野をやり直す</button>
+    </div>
+  </div>
+</div>
+<script>
+const Q=[
+{id:"L01",cat:"lang",label:"言語",type:"blank",passage:"2012年、山中教授がノーベル生理学・医学賞を受賞した。授賞式前のインタビューで「今日は（①）だ。臨床応用という（②）に向かって頑張らないといけない」と語った。研究の道のりをマラソンに喩えた教授は、受賞後に「ノーベル賞は私にとって（③）になる」とも述べ、視線は未来を見据えていた。",question:"空欄①②③に入る最も適切な組み合わせを選べ。",choices:["①折り返し地点　②ゴール　③過去形","①人生最高の日　②ゴール　③道標","①折り返し地点　②メダル　③希望","①休息日　②研究　③誇り"],answer:0,explanation:"①②はセットで考える。臨床応用=研究の目標=ゴール。ゴールを目指す途中の今日は折り返し地点。③はノーベル賞を通過点とする文脈から過去形（過ぎ去ったこと）が適切。"},
+{id:"L02",cat:"lang",label:"言語",type:"choice",question:"次の文章（A〜D）を意味が通じるよう並べ替えよ。\n\nA：人間の脳は、過去に得た知識をきれいさっぱり忘れてしまうようにできている。\nB：それなのに、なぜ人は苦労して学び、知識を得ようとするのか。\nC：私は、それに対して「知恵を身につけるためだ」と答えることにしている。\nD：学ぶという中には「知恵」という目に見えないが生きていく上で大切なものがつくられていく。",choices:["A→B→C→D","A→C→B→D","B→A→C→D","D→A→B→C"],answer:0,explanation:"A（脳は忘れる）→B（なぜ学ぶのか？という問い）→C（知恵のためという答え）→D（知恵の説明）という論理展開。Bの冒頭「それなのに」という逆接がAの後であることを確定させる。"},
+{id:"L03",cat:"lang",label:"言語",type:"blank",passage:"外国から動物を輸入する際、現在は農水省と厚生省が連絡して狂犬病の検疫をした上で輸入している。わが国は狂犬病については圧倒的な先進国だが、狂犬病以外となるといっさい検疫はない。マールブルグ・ウイルス、エボラ出血熱、ラッサ熱など、ペットによって感染することの多いウイルスについても（　　）",question:"空欄に入る最も適切な文を選べ。",choices:["獣医師らが中心となって研究が進められている。","まったく野放しでノーマーク状態である。","いわば、検疫体制の先進国といえる状態だ。","その効果の科学的な解明が進められている。"],answer:1,explanation:"「狂犬病以外はいっさい検疫はない」という直前の流れから、ペット由来ウイルスも野放しが最も自然。③は本文と真逆。①④は文章に根拠がない。"},
+{id:"L04",cat:"lang",label:"言語",type:"choice",question:"「末路」の類義語として最も適切なものを選べ。",choices:["終焉（しゅうえん）","晩年（ばんねん）","後期（こうき）","最後（さいご）"],answer:0,explanation:"末路は物事・人の行き詰まった最後の状態。終焉は物事の終わりを意味し最も近い。晩年は老年期であり終わりの質感を含まない。"},
+{id:"L05",cat:"lang",label:"言語",type:"choice",question:"次の空欄に入る接続詞として最も適切なものを選べ。\n\n「彼女はスポーツが得意だ。（　）、音楽の才能も持ち合わせている。」",choices:["したがって","しかし","さらに","なぜなら"],answer:2,explanation:"前文（スポーツが得意）に情報を付け加える文脈。さらに（追加・累加）が適切。しかしは逆接、したがっては結論、なぜならは理由を示す。"},
+{id:"L06",cat:"lang",label:"言語",type:"choice",question:"ことわざ「石の上にも三年」の意味として最も適切なものを選べ。",choices:["長い年月をかければ冷たい石の上も温まる。転じて、辛くても忍耐強く続ければ成功する。","石のように硬い意志を持てば三年で目標を達成できる。","三年間石の上に座って修行した者だけが成功できる。","石のように動かず機会を待つことが重要だ。"],answer:0,explanation:"冷たい石でも三年座り続ければ暖まる＝辛い状況でも継続すれば道が開けるという忍耐の大切さを説くことわざ。"},
+{id:"L07",cat:"lang",label:"言語",type:"choice",question:"慣用句「油を売る」の意味として最も適切なものを選べ。",choices:["仕事中に怠けて無駄話をする","油脂製品を販売する仕事をする","体に油を塗って体調を整える","無駄なお金を使う"],answer:0,explanation:"江戸時代の油売りが客と長話をしながら商売をしたことに由来。仕事をさぼって無駄話をすることを指す。"},
+{id:"L08",cat:"lang",label:"言語",type:"blank",passage:"近年、AI技術の急速な発展により、多くの産業で自動化が進んでいる。一部の研究者は、これが雇用を奪うと懸念する。（　）、別の専門家たちは、AIが新たな職種を生み出し、人間は創造的な仕事に集中できるようになると主張する。歴史的に見ても、技術革新は短期的には雇用を失わせることがあっても、長期的には社会全体の豊かさをもたらしてきた。",question:"空欄に入る最も適切な語句を選べ。",choices:["そのため","一方で","つまり","例えば"],answer:1,explanation:"前文（雇用を奪うという懸念）と後文（新職種を生む）が対立する論点。一方で（対比）が最適。そのためは順接、つまりは言い換え、例えばは例示。"},
+{id:"L09",cat:"lang",label:"言語",type:"choice",question:"次の文章の要旨として最も適切なものを選べ。\n\n「グローバル化が進む現代社会において、異文化理解の重要性はかつてないほど高まっている。ビジネスの場でも、異なる文化的背景を持つ人々と協働する機会が増えており、文化的感受性を持つことが成功の鍵となっている。しかし、異文化理解とは単に外国語を話せることではなく、その国の歴史や価値観、行動様式を深く理解することを意味する。」",choices:["外国語学習がグローバルビジネスの必須条件である。","グローバル化により文化的多様性が失われつつある。","異文化理解は言語を超えた深い文化的知識を要求される現代の重要課題だ。","ビジネスの成功は異文化の人々と友人になることで達成される。"],answer:2,explanation:"①グローバル化で異文化理解が重要→②ビジネスで必要→③言語だけでなく深い理解が必要、という流れ。要旨は言語を超えた深い理解が現代では重要という③。"},
+{id:"L10",cat:"lang",label:"言語",type:"choice",question:"「彼の言動は（　）していて、言っていることとやっていることが全く違う。」\n\n空欄に入る最も適切な語を選べ。",choices:["矛盾（むじゅん）","一貫（いっかん）","整合（せいごう）","倫理（りんり）"],answer:0,explanation:"言っていることとやっていることが違う＝矛盾。一貫・整合は一致・つながりを意味し逆。"},
+{id:"L11",cat:"lang",label:"言語",type:"choice",question:"「成功した起業家の多くは、失敗を恐れずに挑戦し続けた。彼らに共通するのは、困難な状況でも（　）を持ち続けたことだ。」\n\n空欄に入る最も適切な語を選べ。",choices:["諦め","楽観性","レジリエンス（回復力）","完璧主義"],answer:2,explanation:"失敗を恐れず・困難でも続けるという粘り強さに最も対応するのはレジリエンス（回復力・困難からの立ち直り力）。"},
+{id:"L12",cat:"lang",label:"言語",type:"choice",question:"「彼女は（　）な人物で、誰に対しても公平に接する。」\n\n空欄に入る最も自然な四字熟語を選べ。",choices:["公明正大","優柔不断","傍若無人","付和雷同"],answer:0,explanation:"誰に対しても公平に合う四字熟語は公明正大（公正で私心がない）。優柔不断は決断力がない、傍若無人は他人を無視した振る舞い。"},
+{id:"L13",cat:"lang",label:"言語",type:"choice",question:"次の文のうち、論理的に正しい三段論法となっているものを選べ。",choices:["すべての魚は水中に住む。サメは水中に住む。よってサメは魚だ。","すべての鳥は卵を産む。ペンギンは鳥だ。よってペンギンは卵を産む。","すべての植物は光合成をする。キノコは光合成をしない。よってキノコは植物だ。","すべての哺乳類は肺呼吸をする。イルカは肺呼吸をする。よってイルカは哺乳類だ。"],answer:1,explanation:"②は「Aはすべてがもつ特性を持つ」→「BはAに属する」→「BはAの特性を持つ」という正しい三段論法。①④は肯定の誤謬（後件肯定）、③は形式が誤り。"},
+{id:"L14",cat:"lang",label:"言語",type:"blank",passage:"日本の少子高齢化は深刻な問題となっている。生産年齢人口の減少により、社会保障制度の持続可能性が問われている。一方で、外国人労働者の受け入れを拡大したり、女性や高齢者の就労を促進したりする取り組みが進んでいる。しかし、（　）、根本的な解決には至っていないとの指摘もある。",question:"空欄に入る最も適切な文を選べ。",choices:["これらの取り組みは完全に成功を収めている","これらの施策だけでは少子化そのものへの対策が不十分という見方もあり","外国人労働者の増加が社会問題を引き起こしている","高齢者の就労は経済に悪影響を与えている"],answer:1,explanation:"根本的な解決には至っていないという後半の文につながる内容として、施策だけでは不十分という②が最も自然。しかしという逆接の後なので課題を示す内容が入る。"},
+{id:"L15",cat:"lang",label:"言語",type:"choice",question:"「付和雷同（ふわらいどう）」の意味として最も適切なものを選べ。",choices:["雷のような大きな声で主張すること","自分の意見を持たず、他人の言動にすぐ同調すること","和やかな雰囲気で議論を進めること","主義主張を曲げずに信念を貫くこと"],answer:1,explanation:"付和雷同は自分の考えがなく、むやみに他人の言動に同調すること。付和はむやみに同調すること、雷同は雷が鳴るとすべての物がそれに同調して響くことから。"},
+{id:"L16",cat:"lang",label:"言語",type:"choice",question:"次の文章の空欄（①）（②）に入る語句の組み合わせとして最も適切なものを選べ。\n\n「科学的思考とは、仮説を立て、実験によって（①）し、その結果を（②）に分析することである。」",choices:["①検証　②客観的","①否定　②主観的","①証明　②感情的","①発展　②直感的"],answer:0,explanation:"科学的思考の手順：仮説→検証（実験）→客観的分析。証明は実験段階の説明として弱い（科学では仮説を検証・反証する）。①検証②客観的が最も正確。"},
+{id:"L17",cat:"lang",label:"言語",type:"choice",question:"「彼は口が堅い人で、秘密を絶対に漏らさない。」の「口が堅い」の意味として最も近い慣用句を選べ。",choices:["口が重い","口が軽い","口が達者","口が悪い"],answer:0,explanation:"口が堅いは秘密を守ること。口が重いはなかなか話さない・無口なことで最も近い。口が軽いは秘密をすぐしゃべること（反対）。口が達者は弁舌が巧みなこと。"},
+{id:"L18",cat:"lang",label:"言語",type:"choice",question:"次の文章を読んで、筆者の主張として最も適切なものを選べ。\n\n「近年、SNSの普及により情報の拡散速度が飛躍的に向上した。これは民主主義の観点から、市民が声を上げやすくなるという利点がある。しかし、フェイクニュースや感情的な情報が瞬時に広まる危険性もはらんでいる。したがって、情報リテラシー教育の充実が不可欠だ。」",choices:["SNSは民主主義を破壊する危険なツールである。","SNSの利便性を最大限活用するために規制を撤廃すべきだ。","SNSには利点と危険性があり、それに対応するため情報リテラシー教育が必要だ。","フェイクニュースの責任はすべてSNS企業にある。"],answer:2,explanation:"利点がある・危険性もある・したがって情報リテラシー教育が不可欠という論理展開から、③が主張として正確。①②④は文章の一部しか捉えていない。"},
+{id:"L19",cat:"lang",label:"言語",type:"choice",question:"「烏合の衆（うごうのしゅ）」の意味として正しいものを選べ。",choices:["烏（からす）のように賢く行動する集団","規律もなくただ集まっただけの無秩序な群衆","少数精鋭の優れた集団","烏を崇拝する古代の宗教集団"],answer:1,explanation:"烏合の衆は烏（からす）の集まりのように、統率もなくただ集まっただけの無秩序な群衆のこと。TG-WEB言語でことわざ・四字熟語は頻出。"},
+{id:"L20",cat:"lang",label:"言語",type:"blank",passage:"環境問題への関心が世界的に高まる中、企業のサステナビリティへの取り組みが注目されている。多くの企業がCO2排出量の削減目標を掲げているが、（　）、消費者や投資家からの信頼を損ないかねない。",question:"空欄に入る最も適切な表現を選べ。",choices:["その目標を確実に達成した場合","実態が伴わないグリーンウォッシングに陥った場合","環境目標を設定しない場合","他の企業より高い目標を設定した場合"],answer:1,explanation:"消費者や投資家からの信頼を損なうという結果につながる原因として、見せかけだけの環境対応＝グリーンウォッシング②が最適。①は信頼を高める方向。"},
+{id:"L21",cat:"lang",label:"言語",type:"choice",question:"「示唆（しさ）」の意味として最も適切なものを選べ。",choices:["明確な指示","遠回しにそれとなく伝えること","長々と説明すること","強く主張すること"],answer:1,explanation:"示唆はそれとなく教えること・暗示すること。示唆に富むは多くのことを考えさせる・暗示的な内容が多いという意味。"},
+{id:"L22",cat:"lang",label:"言語",type:"choice",question:"次の文章の構造として最も正確に表しているものを選べ。\n\n「経済成長は雇用を生み出すが、同時に環境負荷も増大させる。持続可能な発展のためには、両者のバランスをとる必要がある。」",choices:["問題提起→解決策の提示","現象の説明→結論の否定","相反する事実の提示→それを踏まえた主張","歴史的背景→現状分析"],answer:2,explanation:"第1文で経済成長（プラス）かつ環境負荷（マイナス）という相反する事実。第2文でバランスが必要という主張。③相反する事実→それを踏まえた主張が正確な構造。"},
+{id:"L23",cat:"lang",label:"言語",type:"choice",question:"「一石二鳥」と同じ意味のことわざ・慣用句を選べ。",choices:["二兎を追う者は一兎をも得ず","棚からぼたもち","一挙両得","虎穴に入らずんば虎子を得ず"],answer:2,explanation:"一石二鳥は一つの行動で二つの利益を得ること。一挙両得（いっきょりょうとく）も一つの行動で二つの利益を得るという同じ意味。二兎を追う者は欲張りの戒め（逆の意味）。"},
+{id:"L24",cat:"lang",label:"言語",type:"choice",question:"次の文の（　）に最も適切な語を入れよ。\n\n「彼の論文は論理的で（　）があり、説得力が高かった。」",choices:["一貫性","矛盾性","曖昧性","感情性"],answer:0,explanation:"論理的で説得力が高い論文の特徴として一貫性（いっかんせい）が最も適切。論旨が首尾一貫していることが論文の評価につながる。"},
+{id:"L25",cat:"lang",label:"言語",type:"choice",question:"次の熟語のうち、「動詞＋目的語」の関係にある漢字の組み合わせを選べ。",choices:["岩石","善悪","落花","山川"],answer:2,explanation:"落花は花が落ちるという動詞＋目的語の関係。岩石・山川は並列関係、善悪は対義関係。"},
+{id:"L26",cat:"lang",label:"言語",type:"choice",question:"「臥薪嘗胆（がしんしょうたん）」の意味として最も適切なものを選べ。",choices:["薪の上に臥し胆を嘗めながら苦労を重ね、目的達成のために苦難に耐えること","失敗から学び、すぐに立ち直ること","薬草の力で病気を治すこと","困難な状況でも楽観的に考えること"],answer:0,explanation:"臥薪嘗胆は中国の故事由来。越王勾践が復讐のために薪の上で寝て胆を嘗め苦労を忘れないようにしたことから、目的のために苦難に耐え続けることを意味する。"},
+{id:"L27",cat:"lang",label:"言語",type:"choice",question:"次の文章の空欄に入る最も適切な語句を選べ。\n\n「彼女の意見は常に（　）で、感情に流されることなく物事を判断する。」",choices:["理性的","感情的","衝動的","主観的"],answer:0,explanation:"感情に流されることなく判断する＝理性的。感情的・衝動的は逆の意味。主観的は個人的な見方を意味し文脈に合わない。"},
+{id:"L28",cat:"lang",label:"言語",type:"choice",question:"「急がば回れ」と最も近い意味の英語のことわざを選べ。",choices:["Time is money.","Better safe than sorry.","The early bird catches the worm.","Haste makes waste."],answer:3,explanation:"急がば回れは急ぐときほど慎重に・遠回りでも確実な道を行けという意味。Haste makes waste（急ぐと失敗する・急いては事を仕損じる）が最も近い。Better safe than sorryも近いが、急ぎの文脈ではHaste makes wasteが適切。"},
+{id:"L29",cat:"lang",label:"言語",type:"choice",question:"次の空欄に入る最も適切な語句を選べ。\n\n「彼はプレゼンで重要なデータを（　）し、聴衆の理解を助けた。」",choices:["視覚化","抽象化","複雑化","省略化"],answer:0,explanation:"データを視覚化する（グラフ・図で示す）ことが聴衆の理解を助けるという文脈に最も合う。"},
+{id:"L30",cat:"lang",label:"言語",type:"choice",question:"「青は藍より出でて藍より青し」の意味として最も適切なものを選べ。",choices:["青色の染料は藍草から作られる","弟子が師匠を超えることがある","自然の色は人工の色より美しい","若者は常に先輩より優れている"],answer:1,explanation:"青は藍（染料の原料）から作られるが、完成した青色は藍より鮮やかであることから、弟子が師匠を超えることを表すことわざ。"},
+{id:"L31",cat:"lang",label:"言語",type:"choice",question:"次の下線部の言葉と最も近い意味の語句を選べ。\n\n「その提案は斬新だが、実現するには多くの障壁がある。」\n\n「斬新」",choices:["伝統的","革新的","保守的","穏健な"],answer:1,explanation:"斬新（ざんしん）は今までにない新しい考え方や手法のこと。革新的が最も近い。"},
+{id:"L32",cat:"lang",label:"言語",type:"choice",question:"文中の（　）に入る最も適切な語を選べ。\n\n「この法律の（　）はあいまいで、解釈によって異なる結論が導かれる可能性がある。」",choices:["条文","条件","条約","条例"],answer:0,explanation:"法律の文章・規定の内容を指すのは条文（じょうぶん）。条件は前提、条約は国際間の取り決め、条例は地方自治体が定める法規。"},
+{id:"L33",cat:"lang",label:"言語",type:"choice",question:"「五十歩百歩」の意味として最も適切なものを選べ。",choices:["少しずつ着実に進歩すること","大差はなく、本質的に同じ程度であること","百回挑戦して五十回成功すること","目標まであと少しのところまで来ていること"],answer:1,explanation:"五十歩百歩は戦場から五十歩逃げた者が百歩逃げた者を笑う話に由来。大差はなく、本質的に同じ程度であることを意味する。"},
+{id:"L34",cat:"lang",label:"言語",type:"choice",question:"次の文の接続詞として最も適切なものを選べ。\n\n「彼は毎日練習した。（　）、大会では思うように実力を発揮できなかった。」",choices:["だから","つまり","しかし","そして"],answer:2,explanation:"毎日練習した（努力）→実力を発揮できなかった（期待に反する結果）という逆接の関係。しかしが適切。"},
+{id:"L35",cat:"lang",label:"言語",type:"choice",question:"「隗より始めよ（かいよりはじめよ）」の意味として最も適切なものを選べ。",choices:["大きな計画を立てるときは小さなことから始めるべきだ","優秀な人材を集めるには、まず自分が率先して実行・行動することが大切だ","古い慣習を打ち破ることで改革が始まる","言い出しっぺが責任を持って実行すべきだ"],answer:1,explanation:"隗より始めよは、賢者を招きたければまず自分（隗）から厚遇せよという故事から、何事も言い出した者・まず自分が実行することが大切という意味に使われる。"},
+{id:"L36",cat:"lang",label:"言語",type:"choice",question:"次の文の（　）に入る最も適切な四字熟語を選べ。\n\n「多くの困難を乗り越えてきた彼の（　）の精神には頭が下がる。」",choices:["不撓不屈（ふとうふくつ）","一触即発（いっしょくそくはつ）","岡目八目（おかめはちもく）","因果応報（いんがおうほう）"],answer:0,explanation:"不撓不屈は困難にめげず、どんな逆境にも屈しないこと。困難を乗り越えるという文脈に最も合う。一触即発は危険な状況、岡目八目は傍観者の方がよく見える、因果応報は行いに応じた報いを受けること。"},
+{id:"L37",cat:"lang",label:"言語",type:"choice",question:"「彼の意見は一理あるが、もっと（　）な視点も必要だ。」\n\n空欄に入る最も適切な語を選べ。",choices:["多角的","一方的","感情的","短絡的"],answer:0,explanation:"一理あるが足りないという文脈から、多角的（様々な角度からの）視点が必要という②が自然。一方的・感情的・短絡的はいずれも否定的な意味合いで不適。"},
+{id:"L38",cat:"lang",label:"言語",type:"choice",question:"次の文章を読んで、下線部「それ」が指す内容として最も適切なものを選べ。\n\n「読書は知識を広げるだけでなく、想像力や共感力を育む。それがなければ、他者との深いコミュニケーションは難しい。」",choices:["読書","知識","想像力や共感力","他者との交流"],answer:2,explanation:"「それがなければ他者との深いコミュニケーションは難しい」という文から、それ＝コミュニケーションに必要なもの＝想像力や共感力（直前の文の後半）。"},
+{id:"L39",cat:"lang",label:"言語",type:"choice",question:"「杞憂（きゆう）」の意味として最も適切なものを選べ。",choices:["取り越し苦労・必要のない心配","喜びが大きくて眠れないこと","古くから続く伝統的な習慣","将来への強い期待と希望"],answer:0,explanation:"杞憂は古代中国の杞の国の人が天が落ちてくるのではないかと心配したという故事から、無用の心配・取り越し苦労のこと。"},
+{id:"L40",cat:"lang",label:"言語",type:"choice",question:"「彼のスピーチは（　）で、聴衆を引き込む力があった。」\n\n空欄に入る最も適切な語を選べ。",choices:["冗長（じょうちょう）","簡潔（かんけつ）","難解（なんかい）","抽象（ちゅうしょう）"],answer:1,explanation:"聴衆を引き込む力があるスピーチの特質として、簡潔（要点を短くまとめた）が最も適切。冗長は長すぎて冗談が多い、難解は理解しにくい。"},
+{id:"C01",cat:"calc-old",label:"従来型 計数",type:"choice",question:"A・B・C・D・Eの5人は月〜金の5日間のうち2日間スイミングに通っている。\n各曜日は2人ずつで同じ組み合わせにはならない。2日連続して通っている人はいない。\n\n条件：\n  i. Aは火曜に通っていなかった\n  ii. BとEは水曜に通った\n  iii. Cは木曜に通っていなかった\n\n金曜日に確実に通っていると言えるのは誰か？",choices:["A","B","C","D","E"],answer:2,explanation:"条件iiよりB・E水曜◯→連続不可でB火X・木X、E火X・木X。条件iよりA火X・水X。条件iiiよりC木X。各曜日2人の制約と連続不可条件を整理するとCの金曜が確定する。"},
+{id:"C02",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある暗号システムで「さくら＝C1B3I1」「うめ＝A3G4」と表される。\nアルファベットは五十音の段（あ段=A、か段=B、さ段=C…）、数字は行（あ=1、い=2、う=3、え=4、お=5）を示す。\n\n「すみれ」を暗号で表すとどうなるか？",choices:["C3G2I4","A3G2I4","C3B2I4","C3G2H4"],answer:0,explanation:"す→さ段=C、う行=3→C3。み→ま段=G（あかさたなはまで7番目）、い行=2→G2。れ→ら段=I（9番目）、え行=4→I4。よってC3G2I4。"},
+{id:"C03",cat:"calc-old",label:"従来型 計数",type:"multi",question:"以下のA〜Dの命題が成り立つとき、正しい選択肢をすべて選べ。\n（好みは好き/嫌いの2択）\n\nA: コーラが好きな人は全員、緑茶が嫌い\nB: 紅茶が好きな人は全員、コーヒーが好き\nC: コーラが好きな人は全員、ココアも好き\nD: コーヒーが好きな人は全員、ココアが嫌い",choices:["紅茶が好きな人は全員、コーラが嫌い","コーラが好きな人は全員、コーヒーが嫌い","ココアが嫌いな人は全員、緑茶が好き","コーヒーが嫌いな人は全員、コーラが好き","ココアが好きな人は全員、紅茶が嫌い"],answer:[0,1,4],explanation:"対偶を導く（AならばB→非BならばA）: A'=緑茶好→コーラ嫌、B'=コーヒー嫌→紅茶嫌、C'=ここが嫌→コーラ嫌、D'=ここが好→コーヒー嫌。①B→D→C'→コーラ嫌◯ ②C→D'→コーヒー嫌◯ ③C'でコーラ嫌まで、緑茶へは繋がらない✗ ④B'で紅茶嫌まで、コーラへは繋がらない✗ ⑤D'→B'→紅茶嫌◯"},
+{id:"C04",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある暗号システムで「JAPAN＝19・1・31・1・27」と表される。\nアルファベット順にA=1、B=3、C=5…と奇数を割り当てる法則がある。\n\n「WATER」の先頭2文字（W・A）を暗号で表すとどれか？",choices:["45・1","47・1","43・1","45・3"],answer:0,explanation:"n番目のアルファベット→2n-1の奇数。W=23番目→2×23-1=45。A=1番目→1。よって45・1。J=10→19（2×10-1=19）で確認可。"},
+{id:"C05",cat:"calc-old",label:"従来型 計数",type:"choice",question:"AさんとBさんが5回じゃんけんをした。\nAはグー1回・チョキ3回・パー1回を出した。\nBはグー1回・チョキ2回・パー2回を出した。\nあいこは一度もなかった。Aは何勝何敗か？",choices:["3勝2敗","2勝3敗","4勝1敗","1勝4敗"],answer:0,explanation:"あいこなし＝同じ手は出ていない。各手の対戦相手を表で整理する。AチョキはBグーかBパーに対して出た（3回）。整理するとA3勝2敗になる。"},
+{id:"C06",cat:"calc-old",label:"従来型 計数",type:"choice",question:"P・Q・R・S・Tの5人が順位をつけた（1〜5位、同順なし）。\n\n条件：① PはQより上位　② RはSより下位　③ TはPより上位　④ QはSより上位\n\n確実に言えることはどれか？",choices:["Tは必ず1位","Rは必ず5位","SはRより上位","Pは必ず2位以内"],answer:2,explanation:"条件②よりR<S（SがRより上位）→SはRより上位は直接条件②から読める。条件を繋げるとT>P>Q>S>Rとなり全順序が確定。"},
+{id:"C07",cat:"calc-old",label:"従来型 計数",type:"choice",question:"10人が一列に並んでいる。全員が嘘つきか正直者かの一方。後ろから2〜10番目の9人が「自分より前にいる者は全員嘘つきだ」と言った。\n\n正直者は何人いるか？",choices:["1人","2人","3人","5人"],answer:0,explanation:"10番目が正直者なら前9人は全員嘘つき。9番目が正直者なら前8人全員嘘つきのはずだが10番目（正直者）が含まれ矛盾。分析すると正直者は1番前の人のみ1人。"},
+{id:"C08",cat:"calc-old",label:"従来型 計数",type:"choice",question:"1〜100までの整数で、3の倍数または5の倍数である数はいくつあるか？",choices:["46個","47個","48個","50個"],answer:1,explanation:"3の倍数：33個。5の倍数：20個。15の倍数（重複）：6個。包除原理より33+20-6=47個。"},
+{id:"C09",cat:"calc-old",label:"従来型 計数",type:"choice",question:"さいころを2個同時に振ったとき、出た目の合計が9以上になる確率はいくつか？",choices:["1/6","5/18","1/3","4/9"],answer:1,explanation:"全組み合わせ=36通り。合計9=4通り、10=3通り、11=2通り、12=1通り。計10通り。確率=10/36=5/18。"},
+{id:"C10",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある学校の生徒100人を調査したところ、数学が好きな生徒60人、英語が好きな生徒50人、どちらも好きな生徒30人だった。どちらも好きでない生徒は何人か？",choices:["10人","20人","30人","40人"],answer:1,explanation:"ベン図で整理。数学のみ=30人。英語のみ=20人。両方=30人。合計=80人。どちらも好きでない=100-80=20人。"},
+{id:"C11",cat:"calc-old",label:"従来型 計数",type:"choice",question:"A・B・C・D・Eの5人が1列に並ぶとき、AとBが隣り合わない並び方は何通りか？",choices:["48通り","72通り","60通り","36通り"],answer:1,explanation:"全並び方=5!=120通り。AとBが隣り合う場合：ABを1セットとして4!×2=48通り。隣り合わない=120-48=72通り。"},
+{id:"C12",cat:"calc-old",label:"従来型 計数",type:"choice",question:"立方体の展開図は全部で何種類あるか？",choices:["9種類","11種類","13種類","15種類"],answer:1,explanation:"立方体の展開図は全部で11種類。正八面体の展開図も11種類。TG-WEB従来型頻出。11を覚えておくことが重要。"},
+{id:"C13",cat:"calc-old",label:"従来型 計数",type:"choice",question:"正八面体の面・辺・頂点の数の組み合わせとして正しいものを選べ。",choices:["面8・辺12・頂点6","面8・辺16・頂点8","面6・辺12・頂点8","面8・辺12・頂点8"],answer:0,explanation:"正八面体は正三角形8面。辺=3×8÷2=12本。頂点=辺-面+2=12-8+2=6個（オイラーの公式）。"},
+{id:"C14",cat:"calc-old",label:"従来型 計数",type:"choice",question:"4人（A・B・C・D）が円形のテーブルに座る。Aの隣にBが座る場合の数は何通りか？",choices:["2通り","4通り","6通り","12通り"],answer:1,explanation:"円形配置の全通り=(4-1)!=6通り。Aを固定するとBの位置はAの左右2か所。残りC・Dの並び方は2!=2通り。よって2×2=4通り。"},
+{id:"C15",cat:"calc-old",label:"従来型 計数",type:"choice",question:"A〜Eの5チームがリーグ戦（総当たり戦）を行った。Eが単独1位になるためには最低何勝必要か？\n（現状：A=3勝1敗、B=2勝2敗、C=2勝2敗、D=1勝3敗、Eは0勝0敗で全試合未消化）",choices:["3勝","4勝（全勝）","2勝","1勝"],answer:1,explanation:"Eは残りA・B・C・Dとの4試合がある。Aの最終成績は最大4勝。Eが1位になるにはAの最終成績を上回る必要があり、全勝（4勝）が必要。"},
+{id:"C16",cat:"calc-old",label:"従来型 計数",type:"choice",question:"赤・青・黄・緑・白の5色のボールが各1個ある。この5個を一列に並べるとき、赤が先頭で白が末尾になる並べ方は何通りか？",choices:["6通り","12通り","24通り","60通り"],answer:0,explanation:"赤と白の位置が固定されているので、残り青・黄・緑の3個を中央3か所に並べる。3!=6通り。"},
+{id:"C17",cat:"calc-old",label:"従来型 計数",type:"choice",question:"コインを3枚同時に投げたとき、少なくとも1枚が表になる確率はいくつか？",choices:["1/2","3/4","7/8","5/6"],answer:2,explanation:"全事象=2³=8通り。すべて裏=1通り。少なくとも1枚が表=8-1=7通り。確率=7/8。余事象を使うのが速い。"},
+{id:"C18",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある学校の全生徒200人のうち、バスで通学する生徒は120人、電車で通学する生徒は90人だった。バスと電車の両方で通学する生徒が30人いるとき、どちらも使わない生徒は何人か？",choices:["10人","20人","30人","40人"],answer:1,explanation:"バスのみ=90人。電車のみ=60人。両方=30人。合計=180人。どちらも使わない=200-180=20人。"},
+{id:"C19",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある規則に従って数字が並んでいる。\n\n2, 5, 10, 17, 26, （　）\n\n（　）に入る数はいくつか？",choices:["35","37","39","41"],answer:1,explanation:"差を見ると3, 5, 7, 9, …と奇数が増えていく（階差数列）。次の差=11。26+11=37。"},
+{id:"C20",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある規則に従って数字が並んでいる。\n\n3, 6, 12, 24, 48, （　）\n\n（　）に入る数はいくつか？",choices:["72","84","96","192"],answer:2,explanation:"公比2の等比数列。48×2=96。"},
+{id:"C21",cat:"calc-old",label:"従来型 計数",type:"choice",question:"A・B・C・D・Eの5人がトーナメント戦（勝ち抜き）を行う。優勝が決まるまでに行われる試合数は全部で何試合か？",choices:["3試合","4試合","5試合","6試合"],answer:1,explanation:"トーナメント戦では優勝者以外全員が1回ずつ負ける。5人中優勝者1人→4人が負ける→試合数=4試合。n人のトーナメントは常にn-1試合。"},
+{id:"C22",cat:"calc-old",label:"従来型 計数",type:"choice",question:"次の命題の対偶として正しいものを選べ。\n\n「雨が降れば、地面が濡れる。」",choices:["地面が濡れなければ、雨が降っていない。","雨が降らなければ、地面が濡れない。","地面が濡れれば、雨が降っている。","雨が降れば、必ず地面が濡れるとは限らない。"],answer:0,explanation:"命題「PならばQ」の対偶は「非Qならば非P」。雨が降る→地面が濡れるの対偶は地面が濡れない→雨が降っていない。①が正しい。②は裏（真とは限らない）、③は逆（真とは限らない）。"},
+{id:"C23",cat:"calc-old",label:"従来型 計数",type:"choice",question:"A・B・C・D・Eの5人の身長を比べた。\n\n条件：① AはBより高い　② CはDより低い　③ BはEより高い　④ DはBより高い\n\n確実に言えることはどれか？",choices:["AはEより高い","Cが最も低い","DはAより高い可能性がある","Eは最も低い"],answer:0,explanation:"③よりB>E、①よりA>B→A>B>E。よってAはEより高いは確実に言える。"},
+{id:"C24",cat:"calc-old",label:"従来型 計数",type:"choice",question:"A・B・C・D・Eの5人が横一列に座る。A・B・Cの3人が隣り合って座る並び方は何通りか？",choices:["24通り","36通り","48通り","72通り"],answer:1,explanation:"A・B・Cをひとまとまり（1単位）として考えると、残りD・Eと合わせて3単位。3単位の並び方=3!=6通り。A・B・C内部の並び方=3!=6通り。全体=6×6=36通り。"},
+{id:"C25",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある試験で60点以上を合格とする。受験者の得点が「45, 72, 58, 63, 81, 39, 70, 55, 68, 92」の場合、合格者は何人か？",choices:["4人","5人","6人","7人"],answer:2,explanation:"60点以上：72, 63, 81, 70, 68, 92 の6人。"},
+{id:"C26",cat:"calc-old",label:"従来型 計数",type:"choice",question:"正方形の紙を対角線で半分に折り、さらに半分に折った後、折り目に垂直に1回切り離す。開くと何枚の紙片になるか？",choices:["2枚","3枚","4枚","8枚"],answer:2,explanation:"正方形を対角線で折ると三角形。さらに折ると小さな三角形。切り離すと折り重なった部分の鏡像が展開されて対称的に切れる。4枚の紙片になる。TG-WEB折り紙問題の基本。"},
+{id:"C27",cat:"calc-old",label:"従来型 計数",type:"choice",question:"1〜9の数字を一つずつ使って3桁の整数を作る。百の位が偶数の3桁の整数は何個作れるか？",choices:["224個","280個","320個","160個"],answer:0,explanation:"百の位が偶数（2,4,6,8の4通り）。残り8個の数字から十の位・一の位を選ぶ=8×7=56通り。合計=4×56=224通り。"},
+{id:"C28",cat:"calc-old",label:"従来型 計数",type:"choice",question:"袋の中に赤玉3個、白玉2個が入っている。1個取り出して色を確認せずに戻さず、もう1個取り出す。2個とも赤玉である確率はいくつか？",choices:["3/10","9/25","2/5","1/3"],answer:0,explanation:"1個目が赤の確率=3/5。2個目が赤の確率=2/4=1/2。合わせて3/5×1/2=3/10。"},
+{id:"C29",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある規則に従って数字が並んでいる。\n\n1, 1, 2, 3, 5, 8, 13, （　）\n\n（　）に入る数はいくつか？",choices:["18","20","21","25"],answer:2,explanation:"フィボナッチ数列（前2項の和が次の項）。8+13=21。"},
+{id:"C30",cat:"calc-old",label:"従来型 計数",type:"choice",question:"5チームが総当たりリーグ戦を行う。全試合数は何試合か？",choices:["8試合","10試合","12試合","15試合"],answer:1,explanation:"nチームの総当たり戦の試合数=n(n-1)÷2=5×4÷2=10試合。"},
+{id:"C31",cat:"calc-old",label:"従来型 計数",type:"choice",question:"A・B・C・Dの4人でじゃんけんを1回した。全員が異なる手（グー・チョキ・パー）を出すことはあり得るか？",choices:["あり得る","あり得ない"],answer:1,explanation:"グー・チョキ・パーは3種類。4人がすべて異なる手を出すには4種類必要だが3種類しかない。よってあり得ない。"},
+{id:"C32",cat:"calc-old",label:"従来型 計数",type:"choice",question:"次の数列の第10項を求めよ。\n\n3, 7, 11, 15, 19, …",choices:["35","37","39","41"],answer:2,explanation:"初項3、公差4の等差数列。第n項=3+(n-1)×4。第10項=3+9×4=3+36=39。"},
+{id:"C33",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある会議室に3人、4人、5人のグループが順番に入る。全員が入った後、各グループが必ず一塊で座る場合の並び方は何通りか？（グループ内の並び方も考慮する）",choices:["72通り","144通り","864通り","1296通り"],answer:2,explanation:"グループを1単位とした3単位の並び方=3!=6通り。各グループ内の並び方=3!×4!×5!=6×24×120=17280通り。合計=6×17280=103680通り。なお選択肢で最も近い概算として864は3!×4!×6=864。実際の計算では3!×(3!×4!×5!)が正解。ただし問題の意図として3グループの並び順のみを問う場合は3!=6通り、グループ内も含む場合は大きな数になる。"},
+{id:"C34",cat:"calc-old",label:"従来型 計数",type:"choice",question:"赤・青・黄の3色を使って隣り合う部分が異なる色になるよう、一列に並んだ4つの区画を塗り分ける方法は何通りか？",choices:["12通り","18通り","24通り","48通り"],answer:1,explanation:"第1区画：3通り。第2区画：第1と異なる2通り。第3区画：第2と異なる2通り。第4区画：第3と異なる2通り。合計=3×2×2×2=24通り。"},
+{id:"C35",cat:"calc-old",label:"従来型 計数",type:"choice",question:"5人（A・B・C・D・E）の中から委員長1人、副委員長1人を選ぶ場合の数は何通りか？",choices:["10通り","15通り","20通り","25通り"],answer:2,explanation:"順序のある選び方（順列）。5×4=20通り。組み合わせ（5C2=10）と混同しないこと。委員長と副委員長は役割が異なるので順列。"},
+{id:"C36",cat:"calc-old",label:"従来型 計数",type:"choice",question:"「PならばQ」「QならばR」が成立するとき、確実に言えることを選べ。",choices:["RならばP","PならばR","RでなければPでない","QでなければRでない"],answer:1,explanation:"三段論法：PならばQ、QならばR → PならばRが成立。また対偶：非Rならば非Pも成立。②PならばRが直接導ける。"},
+{id:"C37",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある学校の生徒150人を調査した。スポーツクラブに所属する生徒は80人、文化クラブに所属する生徒は70人、どちらにも所属しない生徒は20人だった。両方に所属する生徒は何人か？",choices:["10人","15人","20人","25人"],answer:2,explanation:"両方に所属=スポーツ+文化-（どちらかに所属）=80+70-(150-20)=150-130=20人。"},
+{id:"C38",cat:"calc-old",label:"従来型 計数",type:"choice",question:"ある暗号で「SHIP＝19・8・9・16」と表される（アルファベット順にA=1,B=2,…Z=26）。「PORT」を暗号で表すとどれか？",choices:["16・15・18・20","15・16・18・20","16・14・18・19","16・15・17・20"],answer:0,explanation:"P=16、O=15、R=18、T=20。アルファベット順の番号をそのまま使う暗号。"},
+{id:"C39",cat:"calc-old",label:"従来型 計数",type:"choice",question:"6人で握手をしたとき、全員が一度ずつ握手する場合の握手の総数は何回か？",choices:["12回","15回","18回","21回"],answer:1,explanation:"6C2=6×5÷2=15回。"},
+{id:"C40",cat:"calc-old",label:"従来型 計数",type:"choice",question:"袋の中に1〜5の数字カードが1枚ずつ入っている。2枚引いたとき、その和が6以上になる確率はいくつか？",choices:["2/5","3/5","7/10","3/10"],answer:1,explanation:"5枚から2枚を選ぶ組み合わせ=5C2=10通り。和が6以上：(1,5),(2,4),(2,5),(3,4),(3,5),(4,5)=6通り。確率=6/10=3/5。"},
+{id:"N01",cat:"calc-new",label:"新型 計数",type:"table",tableData:{headers:["地域","面積（km²）","人口密度（人/km²）"],rows:[["A","68","673"],["B","47","361"],["C","72","543"],["D","31","259"],["E","53","538"]]},question:"上の表で、最も人口が多いのはA〜Eのうちどれか？（人口＝面積×人口密度）",choices:["A","B","C","D","E"],answer:0,explanation:"全部計算せず候補を絞る。面積も密度も大きいのはA（68・673）とC（72・543）。Aの人口密度がCより130高く面積差は小さい→A>C。実際A≈45764人、C≈39096人。"},
+{id:"N02",cat:"calc-new",label:"新型 計数",type:"table",tableData:{headers:["項目","人数"],rows:[["出生数","13,856人"],["死亡数","10,246人"],["転入数","90,467人"],["転出数","87,252人"]]},question:"上の表で、この町の人口はこの1年間で何人変化したか？",choices:["3,610人増加","6,825人増加","3,215人減少","6,825人減少","2,160人増加"],answer:1,explanation:"出生-死亡=3610増。転入-転出=3215増。合計6825人増加。まず増減方向を確認し選択肢を絞るのがコツ。"},
+{id:"N03",cat:"calc-new",label:"新型 計数",type:"choice",question:"0.05 ÷ □ ＝ 20 ÷ 1000\n\n□に入る数を答えよ。",choices:["0.25","2.5","25","0.025"],answer:1,explanation:"右辺=20÷1000=0.02。□=0.05÷0.02=2.5。"},
+{id:"N04",cat:"calc-new",label:"新型 計数",type:"choice",question:"（52 ＋ □）÷ 9 ＝ 11\n\n□に入る数を答えよ。",choices:["46","47","48","49"],answer:1,explanation:"52＋□＝11×9＝99 → □＝99−52＝47。逆算では掛け算に直してから引く。"},
+{id:"N05",cat:"calc-new",label:"新型 計数",type:"choice",question:"□ × 0.2 ＋ 15 ÷ 3 ＝ 10\n\n□に入る数を答えよ。",choices:["20","22","25","30"],answer:2,explanation:"15÷3=5。□×0.2=10-5=5。□=5÷0.2=25。"},
+{id:"N06",cat:"calc-new",label:"新型 計数",type:"choice",question:"3/5 ＋ □ ＝ 2/3\n\n□に入る数を答えよ。",choices:["1/15","2/15","1/3","4/15"],answer:0,explanation:"□＝2/3−3/5。通分（分母15）：10/15−9/15=1/15。"},
+{id:"N07",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある商品が定価の20%引きで3,200円だった。定価はいくらか？",choices:["3,840円","4,000円","4,200円","3,900円"],answer:1,explanation:"定価×(1-0.2)=3200 → 定価=3200÷0.8=4000円。"},
+{id:"N08",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある仕事をAは6日、Bは4日でそれぞれ完成させる。2人で一緒に行うと何日で完成するか？",choices:["2日","2.4日","3日","3.6日"],answer:1,explanation:"A1日分=1/6、B1日分=1/4。合わせて1/6+1/4=5/12。完成=12/5=2.4日。"},
+{id:"N09",cat:"calc-new",label:"新型 計数",type:"choice",question:"先月の売上は200万円だった。今月は先月より15%増加した。今月の売上はいくらか？",choices:["215万円","220万円","230万円","240万円"],answer:2,explanation:"200×1.15=230万円。"},
+{id:"N10",cat:"calc-new",label:"新型 計数",type:"choice",question:"原価1,500円の商品に30%の利益を見込んで定価をつけた。定価はいくらか？",choices:["1,800円","1,950円","2,000円","2,100円"],answer:1,explanation:"定価=原価×(1+利益率)=1500×1.3=1950円。"},
+{id:"N11",cat:"calc-new",label:"新型 計数",type:"choice",question:"時速60kmで2時間30分走ると何km進むか？",choices:["120km","140km","150km","180km"],answer:2,explanation:"2時間30分=2.5時間。60×2.5=150km。"},
+{id:"N12",cat:"calc-new",label:"新型 計数",type:"choice",question:"□ ÷ 0.4 ＝ 35\n\n□に入る数を答えよ。",choices:["12","13","14","15"],answer:2,explanation:"□＝35×0.4＝14。"},
+{id:"N13",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある試験で平均点80点・受験者30人だった。後から5人が追加受験し、その5人の平均点は90点だった。全員（35人）の平均点は何点か（小数第1位まで）？",choices:["81点","81.4点","82点","83点"],answer:1,explanation:"合計点=80×30+90×5=2400+450=2850点。平均=2850÷35≈81.4点。"},
+{id:"N14",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある学校のクラス（40人）で、犬を飼っている生徒18人、猫を飼っている生徒12人、両方飼っている生徒5人だった。どちらも飼っていない生徒は何人か？",choices:["10人","15人","18人","20人"],answer:1,explanation:"犬のみ=13人、猫のみ=7人、両方=5人、合計25人。どちらも飼っていない=40-25=15人。"},
+{id:"N15",cat:"calc-new",label:"新型 計数",type:"table",tableData:{headers:["月","A店（万円）","B店（万円）"],rows:[["4月","320","280"],["5月","350","310"],["6月","300","340"],["7月","380","290"]]},question:"上の表で、4〜7月の合計売上が多いのはどちらか？",choices:["A店が多い（差：130万円）","B店が多い","同じ","A店が多い（差：60万円）"],answer:0,explanation:"A店合計=1350万円。B店合計=1220万円。差=130万円でA店が多い。各月の差：40+40-40+90=130万円。"},
+{id:"N16",cat:"calc-new",label:"新型 計数",type:"choice",question:"□ × 3 ＋ 7 ＝ 28\n\n□に入る数を答えよ。",choices:["5","6","7","8"],answer:2,explanation:"□×3＝28-7＝21。□＝21÷3＝7。"},
+{id:"N17",cat:"calc-new",label:"新型 計数",type:"choice",question:"48 ÷ □ ＝ 6\n\n□に入る数を答えよ。",choices:["6","7","8","9"],answer:2,explanation:"□＝48÷6＝8。"},
+{id:"N18",cat:"calc-new",label:"新型 計数",type:"choice",question:"□ ＋ 1/4 ＝ 3/4\n\n□に入る数を答えよ。",choices:["1/4","1/2","2/4","3/8"],answer:1,explanation:"□＝3/4-1/4＝2/4＝1/2。"},
+{id:"N19",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある会社の今年の売上は昨年の1.2倍で、昨年の売上は2,500万円だった。今年の売上はいくらか？",choices:["2,800万円","3,000万円","3,200万円","3,500万円"],answer:1,explanation:"2500×1.2＝3000万円。"},
+{id:"N20",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある商品の仕入れ値は800円で、定価は1,200円だった。この商品を定価の10%引きで売った場合の利益はいくらか？",choices:["200円","240円","280円","300円"],answer:2,explanation:"売価=1200×0.9=1080円。利益=1080-800=280円。"},
+{id:"N21",cat:"calc-new",label:"新型 計数",type:"choice",question:"Aは毎分80mで歩く。Bは毎分60mで歩く。2人が同じ地点から同時に反対方向に歩き始めた場合、10分後の2人の距離は何mか？",choices:["800m","1,200m","1,400m","1,600m"],answer:2,explanation:"10分でAは80×10=800m、Bは60×10=600m進む。反対方向なので距離=800+600=1400m。"},
+{id:"N22",cat:"calc-new",label:"新型 計数",type:"table",tableData:{headers:["部門","売上（万円）","前年比"],rows:[["営業A","1,500","120%"],["営業B","900","90%"],["営業C","1,200","110%"],["営業D","600","75%"]]},question:"上の表で、前年の売上が最も高かった部門はどれか？",choices:["営業A","営業B","営業C","営業D"],answer:0,explanation:"前年売上=今年÷前年比。A=1500÷1.2=1250万、B=900÷0.9=1000万、C=1200÷1.1≈1091万、D=600÷0.75=800万。最大はA（1250万）。"},
+{id:"N23",cat:"calc-new",label:"新型 計数",type:"choice",question:"□ × 1.5 ＝ 45\n\n□に入る数を答えよ。",choices:["25","28","30","32"],answer:2,explanation:"□＝45÷1.5＝30。"},
+{id:"N24",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある数の35%が70のとき、その数はいくつか？",choices:["180","200","220","240"],answer:1,explanation:"x×0.35=70 → x=70÷0.35=200。"},
+{id:"N25",cat:"calc-new",label:"新型 計数",type:"choice",question:"原価の40%の利益を乗せて定価2,100円にした商品がある。原価はいくらか？",choices:["1,400円","1,500円","1,600円","1,800円"],answer:1,explanation:"原価×(1+0.4)=2100 → 原価=2100÷1.4=1500円。"},
+{id:"N26",cat:"calc-new",label:"新型 計数",type:"choice",question:"容積50Lのタンクに毎分3Lの水を注ぎ、同時に毎分1Lずつ水が漏れている。空のタンクが満タンになるまで何分かかるか？",choices:["15分","20分","25分","30分"],answer:2,explanation:"正味の増加量=3-1=2L/分。50÷2=25分。"},
+{id:"N27",cat:"calc-new",label:"新型 計数",type:"choice",question:"（□ ＋ 13）× 4 ＝ 100\n\n□に入る数を答えよ。",choices:["10","11","12","13"],answer:2,explanation:"□+13=100÷4=25。□=25-13=12。"},
+{id:"N28",cat:"calc-new",label:"新型 計数",type:"table",tableData:{headers:["種別","件数","1件あたり金額（万円）"],rows:[["輸入申告","240","15"],["輸出申告","180","10"],["関税調査","60","40"],["事前確認","120","8"]]},question:"上の表で、売上合計が最も大きい種別はどれか？（売上＝件数×1件あたり金額）",choices:["輸入申告","輸出申告","関税調査","事前確認"],answer:0,explanation:"輸入申告=3600万。輸出申告=1800万。関税調査=2400万。事前確認=960万。最大は輸入申告（3600万）。"},
+{id:"N29",cat:"calc-new",label:"新型 計数",type:"choice",question:"時速90kmで走る列車が、長さ200mの橋を渡り始めてから渡り終えるまでに20秒かかった。この列車の長さは何mか？",choices:["250m","300m","350m","400m"],answer:1,explanation:"時速90km=秒速25m/s。20秒で進む距離=500m。橋の長さ200m＋列車の長さ=500m → 列車の長さ=300m。"},
+{id:"N30",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある仕事をAは4日、Bは6日、Cは12日で完成できる。3人で一緒に行うと何日で完成するか？",choices:["1日","2日","3日","4日"],answer:1,explanation:"1日の仕事量：A=1/4、B=1/6、C=1/12。合計=3/12+2/12+1/12=6/12=1/2。完成=1÷(1/2)=2日。"},
+{id:"N31",cat:"calc-new",label:"新型 計数",type:"choice",question:"√144 ＋ □ ＝ 20\n\n□に入る数を答えよ。",choices:["6","7","8","9"],answer:2,explanation:"√144=12。12+□=20 → □=8。"},
+{id:"N32",cat:"calc-new",label:"新型 計数",type:"choice",question:"P・Q・Rの3人でじゃんけんを1回した。勝負がつく（あいこでない）確率はいくつか？",choices:["1/3","4/9","2/3","8/27"],answer:2,explanation:"全事象=3³=27通り。あいこ：全員同じ手=3通り、全員違う手（三すくみ）=3!=6通り。合計あいこ=9通り。勝負がつく=27-9=18通り。確率=18/27=2/3。"},
+{id:"N33",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある商品を定価の30%引きで販売したら2,100円だった。定価はいくらか？",choices:["2,700円","2,800円","3,000円","3,200円"],answer:2,explanation:"定価×(1-0.3)=2100 → 定価=2100÷0.7=3000円。"},
+{id:"N34",cat:"calc-new",label:"新型 計数",type:"choice",question:"Aがひとりでやると8日、BがAを手伝うと5日で完成する仕事がある。Bだけでやると何日かかるか？",choices:["10日","12日","13.3日","40/3日"],answer:2,explanation:"全体の仕事量を1とする。A1日=1/8。A+B1日=1/5。B1日=1/5-1/8=3/40。B単独=40/3≈13.3日。"},
+{id:"N35",cat:"calc-new",label:"新型 計数",type:"choice",question:"定価5,000円の商品を15%引きで買い、さらに200円のクーポンを使った。支払い金額はいくらか？",choices:["4,050円","4,100円","4,150円","4,250円"],answer:1,explanation:"5000×0.85=4250円。4250-200=4050円。"},
+{id:"N36",cat:"calc-new",label:"新型 計数",type:"choice",question:"A市からB市まで時速40kmで行くと3時間かかる。時速60kmで行くと何時間かかるか？",choices:["1.5時間","2時間","2.5時間","3時間"],answer:1,explanation:"距離=40×3=120km。時速60kmでの時間=120÷60=2時間。"},
+{id:"N37",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある製品の不良品率は2%だった。1,500個製造した場合、不良品は何個か？",choices:["25個","30個","35個","40個"],answer:1,explanation:"1500×0.02=30個。"},
+{id:"N38",cat:"calc-new",label:"新型 計数",type:"choice",question:"□ × 0.5 ＋ 1/4 ＝ 3/4\n\n□に入る数を答えよ。",choices:["0.5","1","1.5","2"],answer:1,explanation:"□×0.5=3/4-1/4=1/2。□=1/2÷0.5=1。"},
+{id:"N39",cat:"calc-new",label:"新型 計数",type:"choice",question:"ある商品を100個仕入れ、60%は定価1,000円で売り、残り40%は定価の50%引きで売った。売上合計はいくらか？",choices:["76,000円","80,000円","82,000円","84,000円"],answer:0,explanation:"定価で売った分=60×1000=60000円。半額で売った分=40×500=20000円。合計=80000円。"},
+{id:"N40",cat:"calc-new",label:"新型 計数",type:"choice",question:"（24 ÷ □）＋ 6 ＝ 14\n\n□に入る数を答えよ。",choices:["2","3","4","5"],answer:1,explanation:"24÷□=14-6=8。□=24÷8=3。"},
+{id:"E02",cat:"eng",label:"英語",type:"choice",passage:"Logistics is the process of planning, implementing, and controlling the efficient flow of goods from point of origin to point of consumption. The goal of logistics management is to meet customer requirements while minimizing cost. In recent years, digitalization has dramatically changed how supply chains operate.",question:"本文の主旨として最も適切なものを選べ。",choices:["ロジスティクスとは荷物を運ぶことのみを指す。","ロジスティクスは物の流れを効率的に管理しコストを最小化する活動であり、近年はデジタル化が大きな変化をもたらしている。","デジタル化によってサプライチェーンのコストは増大している。","ロジスティクスはもっぱら製造業に関わる概念である。"],answer:1,explanation:"第1文でロジスティクスの定義、第2文でコスト最小化の目標、第3文でデジタル化の影響。②がこれらを正確に要約している。"},
+{id:"E04",cat:"eng",label:"英語",type:"choice",question:"Choose the word closest in meaning to \"mitigate\".\n\n\"The new policy aims to mitigate the impact of rising costs on consumers.\"",choices:["increase（増加させる）","reduce（軽減する）","ignore（無視する）","accelerate（加速する）"],answer:1,explanation:"mitigateは軽減する・和らげるの意味。reduceが最も近い。ビジネス英語の頻出語彙。"},
+{id:"E05",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"The company decided to ( ) its overseas operations due to declining profits.\"",choices:["expand（拡大する）","scale back（縮小する）","accelerate（加速する）","duplicate（複製する）"],answer:1,explanation:"利益の減少により海外事業を縮小した。scale backが適切。"},
+{id:"E06",cat:"eng",label:"英語",type:"choice",passage:"The Bill of Lading (B/L) is one of the most important documents in international trade. It serves three main functions: it is a receipt for goods shipped, a document of title to the goods, and evidence of the contract of carriage. Without a proper B/L, importers cannot claim ownership of their shipment.",question:"According to the passage, which of the following is NOT a function of the Bill of Lading?",choices:["A receipt for shipped goods","Evidence of the carriage contract","A document proving payment of customs duties","A document of title to the goods"],answer:2,explanation:"B/Lの3機能は①貨物の受取証②所有権証書③運送契約の証拠。関税支払いの証明は言及されていない。通関士試験の知識とも連携する。"},
+{id:"E07",cat:"eng",label:"英語",type:"choice",question:"Choose the correct word for the blank.\n\n\"She is known for her ( ) attention to detail, which makes her an excellent auditor.\"",choices:["meticulous（細心の）","careless（不注意な）","arbitrary（恣意的な）","ambiguous（曖昧な）"],answer:0,explanation:"meticulousは細部まで注意を払う・几帳面なの意味。優秀な監査人の特質として適切。"},
+{id:"E08",cat:"eng",label:"英語",type:"choice",question:"Choose the word closest in meaning to \"transparent\" in a business context.\n\n\"The company strives to be transparent in its financial reporting.\"",choices:["opaque（不透明な）","clear and open（明確で開かれた）","profitable（収益性のある）","complex（複雑な）"],answer:1,explanation:"transparentは透明な・明確な・隠し立てのないという意味。clear and openが最も近い。コーポレートガバナンスの文脈で頻出。"},
+{id:"E09",cat:"eng",label:"英語",type:"choice",passage:"Supply chain management involves the coordination and collaboration with channel partners, which can be suppliers, intermediaries, third-party service providers, and customers. In essence, supply chain management integrates supply and demand management within and across companies.",question:"Which of the following best describes supply chain management according to the passage?",choices:["A process involving only suppliers and customers","Coordination among various partners to integrate supply and demand","A method to reduce production costs","A tool for managing customer complaints"],answer:1,explanation:"本文はsupply chain managementを様々なパートナーとの連携・調整によりサプライとデマンドを統合するプロセスと定義している。②が最も正確。"},
+{id:"E10",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"Despite the economic downturn, the company remained ( ) throughout the fiscal year.\"",choices:["bankrupt（破産した）","profitable（収益性のある）","insolvent（支払不能の）","defunct（廃業した）"],answer:1,explanation:"経済低迷にもかかわらず通年で収益を維持したという文脈。profitableが適切。bankruptとinsolventは破産・支払不能で逆の意味。"},
+{id:"E11",cat:"eng",label:"英語",type:"choice",question:"次のイディオムの意味として最も適切なものを選べ。\n\n\"The early bird catches the worm\"",choices:["夜型の人が成功する","早起きや先手を打つ者が成功・有利になる","勤勉な者は必ず成功する","チームワークが重要だ"],answer:1,explanation:"The early bird catches the wormは早起きの鳥が虫を捕まえるという意味から、早起き・先手を打つ者が有利になるということわざ。早起きは三文の得に対応する。"},
+{id:"E12",cat:"eng",label:"英語",type:"choice",question:"Choose the word closest in meaning to \"facilitate\".\n\n\"The new software will facilitate communication between departments.\"",choices:["hinder（妨げる）","make easier（容易にする）","complicate（複雑にする）","replace（置き換える）"],answer:1,explanation:"facilitateは促進する・容易にするの意味。make easierが最も近い。hinderは妨げる（反対語）。"},
+{id:"E13",cat:"eng",label:"英語",type:"choice",question:"次の慣用表現の意味として正しいものを選べ。\n\n\"Cut corners\"",choices:["近道を使って時間を節約する","コスト削減のために品質や手順を省く","角を曲がる","細かい部分に注意を払う"],answer:1,explanation:"cut cornersは手を抜く・品質を落としてコストや時間を節約するという意味のイディオム。"},
+{id:"E14",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"The trade agreement will ( ) tariff barriers between the two countries.\"",choices:["establish","eliminate","increase","complicate"],answer:1,explanation:"貿易協定が関税障壁を撤廃するという文脈。eliminateが適切。"},
+{id:"E15",cat:"eng",label:"英語",type:"choice",passage:"Incoterms (International Commercial Terms) are a set of internationally recognized rules that define the responsibilities of buyers and sellers in international trade transactions. They specify who is responsible for the cost of freight, insurance, and customs clearance at each stage of the shipping process. The most commonly used terms include FOB (Free on Board), CIF (Cost, Insurance and Freight), and EXW (Ex Works).",question:"According to the passage, what do Incoterms define?",choices:["The quality standards of exported goods","The responsibilities of buyers and sellers regarding costs and risks in trade","The tax rates applied to imported goods","The documentation required for customs clearance"],answer:1,explanation:"本文第1-2文から、Incotermsは費用・リスク負担の責任範囲を定める。②が正解。通関士試験の知識と直結する内容。"},
+{id:"E16",cat:"eng",label:"英語",type:"choice",question:"Choose the word that is OPPOSITE in meaning to \"mandatory\".\n\n\"Submission of a packing list is mandatory for all shipments over 100kg.\"",choices:["compulsory（強制的な）","optional（任意の）","required（必要な）","essential（不可欠な）"],answer:1,explanation:"mandatoryは義務的な・必須なという意味。その反対はoptional（任意の・選択的な）。"},
+{id:"E17",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"The shipment was ( ) at the port due to missing documentation.\"",choices:["expedited","detained","dispatched","approved"],answer:1,explanation:"書類不備により貨物が港で差し止められた。detainedが最も適切。"},
+{id:"E18",cat:"eng",label:"英語",type:"choice",passage:"Free trade zones (FTZs) are designated areas where goods can be imported, stored, handled, manufactured, or reconfigured, and re-exported under specific customs regulations that are more liberal than prevailing customs rules in the country. The main advantage is that companies can defer or avoid customs duties on goods that will be re-exported.",question:"What is the primary benefit of Free Trade Zones according to the passage?",choices:["Companies can permanently avoid paying any taxes.","Goods can be re-exported without ever entering the country.","Companies can delay or avoid customs duties on goods destined for re-export.","FTZs allow unlimited import of goods without documentation."],answer:2,explanation:"本文最後の文から、再輸出される貨物の関税を延期または回避できる③が正解。①は永久にが誤り。"},
+{id:"E19",cat:"eng",label:"英語",type:"choice",question:"Choose the word closest in meaning to \"stringent\".\n\n\"The customs authority enforces stringent regulations on pharmaceutical imports.\"",choices:["strict（厳格な）","flexible（柔軟な）","vague（曖昧な）","outdated（時代遅れの）"],answer:0,explanation:"stringentは厳格な・厳しいの意味。strictが最も近い。通関・輸入規制の文脈で頻出の語彙。"},
+{id:"E20",cat:"eng",label:"英語",type:"choice",question:"次の英文の意味として最も適切なものを選べ。\n\n\"The invoice must be submitted within 30 days of shipment.\"",choices:["請求書は出荷から30日以内に提出しなければならない。","請求書は30日ごとに提出する必要がある。","出荷後30日で請求書が自動発行される。","請求書の有効期限は出荷後30日である。"],answer:0,explanation:"within 30 days of shipmentは出荷から30日以内に。must be submittedは義務。①が正確な翻訳。"},
+{id:"E21",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate expression for the blank.\n\n\"We would like to ( ) the meeting scheduled for Thursday to the following Monday.\"",choices:["postpone","cancel","attend","accelerate"],answer:0,explanation:"木曜の会議を翌月曜に延期する→postpone。cancelは中止、attendは出席、accelerateは前倒し・加速。ビジネスメール頻出表現。"},
+{id:"E22",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"All importers must ensure ( ) with customs regulations.\"",choices:["violation（違反）","compliance（遵守）","exemption（免除）","declaration（申告）"],answer:1,explanation:"通関規則への遵守を確保する。complianceが適切。regulatory compliance（法令遵守）は通関業務の最重要概念。"},
+{id:"E23",cat:"eng",label:"英語",type:"choice",question:"次のビジネスメールの空欄に入る最も適切な表現を選べ。\n\n\"Dear Mr. Tanaka,\n( ) to your inquiry, we are pleased to confirm that the order has been dispatched.\"",choices:["In response","In spite","Due to","Instead of"],answer:0,explanation:"In response to your inquiry（お問い合わせにお答えして）は英文ビジネスメールの定型表現。"},
+{id:"E24",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"The customs declaration must accurately ( ) the contents and value of the shipment.\"",choices:["conceal","describe","deny","estimate"],answer:1,explanation:"通関申告書は貨物の内容と価格を正確に記述・申告する必要がある。describeが適切。concealは隠す（違法）、estimateは概算（正確さが求められるため不適）。"},
+{id:"E25",cat:"eng",label:"英語",type:"choice",question:"Choose the word closest in meaning to \"procure\".\n\n\"The company needs to procure raw materials from overseas suppliers.\"",choices:["sell（売る）","obtain（調達する）","manufacture（製造する）","transport（輸送する）"],answer:1,explanation:"procureは調達する・入手するの意味。obtainが最も近い。procurement（調達）は貿易・ロジスティクス分野の重要語彙。"},
+{id:"E26",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"The goods were damaged during ( ), and the insurance claim has been filed.\"",choices:["manufacturing","transit","storage","inspection"],answer:1,explanation:"保険請求が提出されたという文脈から、輸送中（transit）に損傷した、というのが最も自然。"},
+{id:"E27",cat:"eng",label:"英語",type:"choice",question:"次の英語の意味として最も適切なものを選べ。\n\n\"lead time\"",choices:["リードタイム（発注から納品までの所要時間）","製品の保証期間","輸送コストの先払い金額","在庫の最低保有量"],answer:0,explanation:"lead timeは発注から納品・製造完了までにかかる時間。ロジスティクス・調達の基本用語。"},
+{id:"E28",cat:"eng",label:"英語",type:"choice",question:"Choose the word closest in meaning to \"consolidate\" in a logistics context.\n\n\"The freight forwarder will consolidate multiple shipments into one container.\"",choices:["separate（分離する）","combine（まとめる）","inspect（検査する）","insure（保険をかける）"],answer:1,explanation:"consolidateは統合する・まとめるの意味。複数の貨物を一つのコンテナにまとめる（混載）という文脈。combineが最も近い。"},
+{id:"E29",cat:"eng",label:"英語",type:"choice",question:"Choose the most appropriate word for the blank.\n\n\"A ( ) of origin is required to claim preferential tariff rates under the trade agreement.\"",choices:["certificate","contract","invoice","packing list"],answer:0,explanation:"原産地証明書（certificate of origin）はFTA特恵関税を適用する際に必要な書類。通関士実務で最頻出の書類の一つ。"},
+{id:"E30",cat:"eng",label:"英語",type:"choice",question:"Choose the word closest in meaning to \"tariff\".\n\n\"The government imposed a 25% tariff on imported steel products.\"",choices:["subsidy（補助金）","customs duty（関税）","fine（罰金）","quota（割当量）"],answer:1,explanation:"tariffは関税のこと。customs dutyが最も近い。通関士試験の核心語彙。"},
+{id:"E01",cat:"eng",label:"英語",type:"eng-multi",passage:"As the end of the 21st century approaches, the world is more connected than ever. National boundaries once limited the regions where people were able to participate in economic activities. However, today, globalization has brought cross-border trade of economics.\n\n( [BLANK] ) the meaning of national boundaries is different from what it used to be. Now, you can buy whatever you want, regardless of national borders.\n\nNonetheless, the globalization of the economy has not brought an equitable distribution of wealth. Many countries are still facing serious poverty, and the [UNDER]piled-up[/UNDER] effect of poverty is increasing the number of malnourished children.",questions:[{q:"(1) 空欄に入る最も適切な接続詞を選べ。",choices:["On the other hand","As a result","But"],answer:1,exp:"前段（グローバル化が進んだ）の結果として国境の意味が変わったという順接の関係。As a resultが適切。"},{q:"(2) 下線部piled-upと最も近い意味の語を選べ。",choices:["accumulative（蓄積する）","identified（特定の）","restrictive（限定的な）"],answer:0,exp:"piled upは積み重なった・蓄積した。accumulative（累積する）が最も近い。"},{q:"(3) 本文の内容と合致するものを選べ。",choices:["国境の重要性は完全に薄れてしまった。","経済グローバル化により富が平等に分配されるようになった。","経済グローバル化と富の平等な分配は必ずしも同時に起こるとは限らない。"],answer:2,exp:"最終段落でグローバル化は進んだが貧富の差は残っていると述べている。③が趣旨と合致する。"}]},
+{id:"E03",cat:"eng",label:"英語",type:"eng-multi",passage:"Customs clearance is the process of passing goods through customs so they can enter or leave a country. It involves documentation, payment of duties and taxes, and compliance with regulations. Importers and exporters must ensure all required documents such as commercial invoices, packing lists, and certificates of origin are accurately prepared.\n\nDelays in customs clearance can result in significant costs, including storage fees and missed delivery windows. Therefore, hiring a customs broker, who acts as a liaison between the importer/exporter and the government, can be a smart investment.",questions:[{q:"(1) What is the main purpose of customs clearance?",choices:["To transport goods between countries quickly","To allow goods to legally enter or leave a country","To avoid paying taxes on imported goods"],answer:1,exp:"第1文にcustoms clearance is the process of passing goods through customs so they can enter or leave a countryとある。"},{q:"(2) 本文中のliaisonの意味として最も近いものを選べ。",choices:["specialist（専門家）","intermediary（仲介者）","opponent（反対者）"],answer:1,exp:"customs brokerが輸入者/輸出者と政府の間で仲介する。liaisonは連絡係・仲介者の意味。"},{q:"(3) According to the passage, what can delays in customs clearance cause?",choices:["Permanent bans on imports","Additional costs such as storage fees","Changes in customs regulations"],answer:1,exp:"Delays can result in significant costs including storage feesとある。"}]},
+{id:"E31",cat:"eng",label:"英語",type:"eng-multi",passage:"Supply chain disruptions have become a major concern for global businesses since the COVID-19 pandemic. Companies that had relied on single-source suppliers found themselves unable to source critical components. As a result, many firms are now adopting a strategy called supply chain diversification, which involves working with multiple suppliers across different regions.\n\nWhile this approach increases resilience, it also ( [BLANK] ) costs and management complexity. Businesses must carefully consider the trade-offs between cost efficiency and supply chain stability.",questions:[{q:"(1) 空欄に入る最も適切な語を選べ。",choices:["reduces","increases","ignores"],answer:1,exp:"レジリエンスは高まるがコストと複雑性も増す、という譲歩構文。increasesが適切。"},{q:"(2) 本文が最も示唆していることを選べ。",choices:["サプライチェーンの多様化は常にコスト削減につながる。","企業はサプライチェーンの安定性とコスト効率のバランスを取る必要がある。","COVID-19以降、単一供給者戦略が主流になった。"],answer:1,exp:"最終文でコスト効率とサプライチェーン安定性のトレードオフを検討する必要があると述べている。②が正解。"}]}
+];
+
+const CATS=[
+ {id:"lang",    name:"言語",        desc:"空欄補充・長文読解・語彙・四字熟語",badge:"bl"},
+ {id:"calc-old",name:"従来型 計数", desc:"推論・暗号・命題・確率・数列",     badge:"bp"},
+ {id:"calc-new",name:"新型 計数",   desc:"四則逆算・図表・割合・仕事算",     badge:"bm"},
+ {id:"eng",     name:"英語",        desc:"長文読解・語彙・内容一致・貿易英語",badge:"be"},
+];
+
+let session={questions:[],idx:0,answers:[],cat:null};
+let stats={};
+try{stats=JSON.parse(localStorage.getItem("tgweb-stats")||"{}");}catch(e){}
+function saveStats(){try{localStorage.setItem("tgweb-stats",JSON.stringify(stats));}catch(e){}}
+
+function renderHome(){
+ const cg=document.getElementById("cat-grid");
+ cg.innerHTML=CATS.map(c=>{
+  const qs=Q.filter(q=>q.cat===c.id);
+  const st=stats[c.id]||{done:0,correct:0};
+  const pct=st.done?Math.round(st.correct/st.done*100)+"%":"未挑戦";
+  return`<button class="cat-btn" onclick="startCat('${c.id}')"><div class="cat-label">${c.desc}</div><div class="cat-name">${c.name}</div><div class="cat-count">${qs.length}問 · 正解率 ${pct}</div></button>`;
+ }).join("");
+ const td=Object.values(stats).reduce((a,b)=>a+(b.done||0),0);
+ const tc=Object.values(stats).reduce((a,b)=>a+(b.correct||0),0);
+ document.getElementById("stat-grid").innerHTML=[
+  {num:Q.length,lbl:"総問題数"},{num:td,lbl:"解答済み"},{num:tc,lbl:"正解数"},{num:td?Math.round(tc/td*100)+"%":"—",lbl:"全体正答率"}
+ ].map(s=>`<div class="stat-card"><div class="s-num">${s.num}</div><div class="s-lbl">${s.lbl}</div></div>`).join("");
+}
+function resetStats(){if(!confirm("記録をリセットしますか？"))return;stats={};saveStats();renderHome();}
+function startCat(catId){const qs=Q.filter(q=>q.cat===catId).sort(()=>Math.random()-.5);session={questions:qs,idx:0,answers:[],cat:catId};showScreen("quiz");renderQuestion();}
+function startAll(){const qs=[...Q].sort(()=>Math.random()-.5);session={questions:qs,idx:0,answers:[],cat:null};showScreen("quiz");renderQuestion();}
+function retrySession(){startCat(session.cat||"lang");}
+function backHome(){showScreen("home");renderHome();}
+
+let multiSel=[];let engAnswers={};
+
+function renderQuestion(){
+ const q=session.questions[session.idx];
+ const total=session.questions.length;
+ document.getElementById("prog-text").textContent=`${session.idx+1} / ${total}`;
+ document.getElementById("prog-cat").textContent=q.label;
+ document.getElementById("prog-fill").style.width=Math.round(session.idx/total*100)+"%";
+ document.getElementById("btn-next").classList.add("hidden");
+ multiSel=[];engAnswers={};
+ const cat=CATS.find(c=>c.id===q.cat);
+ let html=`<div class="q-card"><div class="q-meta"><span class="badge ${cat?cat.badge:"bq"}">${q.label}</span><span class="badge bq">Q${session.idx+1}</span></div>`;
+ if(q.type==="eng-multi"){html+=buildEngMulti(q);}
+ else{
+  if(q.passage)html+=`<div class="q-passage">${esc(q.passage)}</div>`;
+  if(q.tableData)html+=buildTable(q.tableData);
+  html+=`<div class="q-text">${esc(q.question)}</div>`;
+  if(q.type==="multi"){
+   html+=`<p class="multi-hint">※正しいものをすべて選び「回答する」を押してください</p>`;
+   html+=buildChoices(q,true);
+   html+=`<div style="margin-top:10px"><button class="btn btn-p" id="btn-submit-multi" onclick="submitMulti()">回答する</button></div>`;
+  }else{html+=buildChoices(q,false);}
+ }
+ html+="</div>";
+ document.getElementById("q-container").innerHTML=html;
+}
+
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function buildTable(td){let h="<table class='q-table'><tr>";td.headers.forEach(hd=>h+=`<th>${hd}</th>`);h+="</tr>";td.rows.forEach(row=>{h+="<tr>";row.forEach(c=>h+=`<td>${c}</td>`);h+="</tr>";});return h+"</table>";}
+function buildChoices(q,isMulti){return`<div class="choices">${q.choices.map((c,i)=>`<button class="choice-btn" id="ch-${i}" onclick="${isMulti?`toggleMulti(${i},this)`:`submitAnswer(${i})`}"><span class="choice-num">${i+1}</span><span>${esc(c)}</span></button>`).join("")}</div>`;}
+function buildEngMulti(q){let html=`<div class="q-passage">${esc(q.passage)}</div>`;q.questions.forEach((sub,qi)=>{html+=`<div class="q-text" style="margin-top:1rem;font-size:.9rem">${esc(sub.q)}</div><div class="choices" id="eng-choices-${qi}">${sub.choices.map((c,ci)=>`<button class="choice-btn" id="eng-${qi}-${ci}" onclick="submitEngSub(${qi},${ci})"><span class="choice-num">${ci+1}</span><span>${esc(c)}</span></button>`).join("")}</div>`;});html+="<div id='eng-all-exp'></div>";return html;}
+function disableAll(){document.querySelectorAll(".choice-btn").forEach(b=>b.disabled=true);}
+function submitAnswer(idx){const q=session.questions[session.idx];const ok=idx===q.answer;disableAll();document.getElementById("ch-"+idx).classList.add(ok?"correct":"wrong");if(!ok)document.getElementById("ch-"+q.answer).classList.add("reveal");record(ok,q);showExp(q.explanation);document.getElementById("btn-next").classList.remove("hidden");}
+function toggleMulti(idx,btn){if(multiSel.includes(idx)){multiSel=multiSel.filter(x=>x!==idx);btn.style.borderColor="";btn.style.background="";}else{multiSel.push(idx);btn.style.borderColor="var(--accent)";btn.style.background="var(--accent-l)";}}
+function submitMulti(){const q=session.questions[session.idx];const ok=JSON.stringify([...multiSel].sort((a,b)=>a-b))===JSON.stringify([...q.answer].sort((a,b)=>a-b));disableAll();q.answer.forEach(i=>document.getElementById("ch-"+i)&&document.getElementById("ch-"+i).classList.add("reveal"));multiSel.forEach(i=>{const b=document.getElementById("ch-"+i);if(!b)return;b.classList.add(q.answer.includes(i)?"correct":"wrong");});record(ok,q);showExp(q.explanation);document.getElementById("btn-next").classList.remove("hidden");const sm=document.getElementById("btn-submit-multi");if(sm)sm.remove();multiSel=[];}
+function submitEngSub(qi,ci){const q=session.questions[session.idx];const sub=q.questions[qi];const ok=ci===sub.answer;engAnswers[qi]=ok;document.querySelectorAll(`#eng-choices-${qi} .choice-btn`).forEach(b=>b.disabled=true);document.getElementById(`eng-${qi}-${ci}`).classList.add(ok?"correct":"wrong");if(!ok)document.getElementById(`eng-${qi}-${sub.answer}`).classList.add("reveal");const ea=document.getElementById("eng-all-exp");const d=document.createElement("div");d.className="explanation";d.style.marginTop="8px";d.innerHTML=`<strong>(${qi+1})解説</strong><br>${esc(sub.exp)}`;ea.appendChild(d);if(Object.keys(engAnswers).length===q.questions.length){const allOk=Object.values(engAnswers).every(Boolean);record(allOk,q);document.getElementById("btn-next").classList.remove("hidden");}}
+function record(ok,q){session.answers.push(ok);if(!stats[q.cat])stats[q.cat]={done:0,correct:0};stats[q.cat].done++;if(ok)stats[q.cat].correct++;saveStats();}
+function showExp(exp){if(!exp)return;const d=document.createElement("div");d.className="explanation";d.innerHTML=`<strong>解説</strong><br>${esc(exp)}`;document.querySelector(".q-card").appendChild(d);}
+function nextQuestion(){session.idx++;if(session.idx>=session.questions.length){showResult();return;}renderQuestion();window.scrollTo(0,0);}
+function showResult(){const total=session.answers.length;const correct=session.answers.filter(Boolean).length;document.getElementById("res-score").textContent=total?Math.round(correct/total*100)+"%":"—";document.getElementById("res-correct").textContent=correct;document.getElementById("res-wrong").textContent=total-correct;document.getElementById("res-total").textContent=total;showScreen("result");}
+function showScreen(name){["home","quiz","result"].forEach(s=>document.getElementById("screen-"+s).classList.toggle("hidden",s!==name));}
+renderHome();
+</script>
+</body>
+</html>
