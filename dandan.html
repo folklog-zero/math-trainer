@@ -1,0 +1,837 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="段々">
+<meta name="theme-color" content="#1F3F66">
+<title>段々 自重トレーニングの記録</title>
+<style>
+:root{
+  --paper:#F1F3EF;
+  --surface:#FFFFFF;
+  --ink:#18212B;
+  --sub:#56616D;
+  --line:#D3D8D4;
+  --ai:#1F3F66;
+  --ai-soft:#E2E9F1;
+  --on-ai:#FFFFFF;
+  --gold:#E3A51A;
+  --gold-ink:#7A5600;
+  --green:#2F7D62;
+  --warn:#A2452B;
+  --mincho:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif CJK JP","Noto Serif JP",serif;
+  --gothic:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","YuGothic","Noto Sans CJK JP","Noto Sans JP",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --paper:#111820;
+    --surface:#1A232E;
+    --ink:#E8ECEA;
+    --sub:#9BA7B3;
+    --line:#2D3946;
+    --ai:#9DBFE8;
+    --ai-soft:#22303F;
+    --on-ai:#0E1620;
+    --gold:#E8B33A;
+    --gold-ink:#E8B33A;
+    --green:#6CC3A0;
+    --warn:#E79A82;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--gothic);font-size:16px;line-height:1.75;
+  padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+}
+#app{max-width:560px;margin:0 auto;padding:0 18px 72px}
+h1,h2,h3{font-family:var(--mincho);font-weight:600;line-height:1.35;margin:0}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* 見出しまわり */
+.mast{padding:36px 0 22px;display:flex;align-items:flex-end;gap:16px;border-bottom:2px solid var(--ink)}
+.mast h1{font-size:56px;letter-spacing:.08em;line-height:1}
+.mast p{color:var(--sub);font-size:14px;padding-bottom:6px}
+.block{padding:26px 0;border-bottom:1px solid var(--line)}
+.block > h2{font-size:22px;margin-bottom:12px}
+.lead{font-size:17px}
+.fine{color:var(--sub);font-size:14px;line-height:1.7}
+
+/* ボタン */
+.btn{
+  display:block;width:100%;min-height:56px;padding:12px 18px;text-align:left;
+  background:var(--surface);border:1.5px solid var(--ink);border-radius:6px;
+}
+.btn strong{display:block;font-family:var(--mincho);font-size:20px;font-weight:600}
+.btn span{display:block;color:var(--sub);font-size:13.5px;line-height:1.5}
+.btn.primary{background:var(--ai);border-color:var(--ai);color:var(--on-ai)}
+.btn.primary span{color:var(--on-ai);opacity:.82}
+.btn.center{text-align:center}
+.btn + .btn{margin-top:10px}
+.chip{
+  min-height:44px;padding:6px 14px;background:transparent;
+  border:1.5px solid var(--line);border-radius:22px;font-size:15px;
+}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.link{background:none;border:0;padding:8px 0;color:var(--ai);text-decoration:underline;text-underline-offset:3px;font-size:15px}
+.link.danger{color:var(--warn)}
+
+/* 今週 */
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:4px}
+.day{text-align:center;padding:8px 0 10px;border-top:3px solid var(--line)}
+.day b{display:block;font-weight:400;font-size:13px;color:var(--sub)}
+.day i{display:block;font-style:normal;font-family:var(--mincho);font-size:17px;min-height:30px;line-height:30px}
+.day.today{border-top-color:var(--gold)}
+.day.today b{color:var(--ink);font-weight:600}
+.day.strength{border-top-color:var(--ai)}
+.day.strength i{color:var(--ai);font-weight:600}
+.day.light{border-top-color:var(--green)}
+.day.light i{color:var(--green)}
+
+/* 段の一覧 */
+.rows{list-style:none;margin:0;padding:0}
+.row{
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:14px;width:100%;
+  padding:14px 0;background:none;border:0;border-top:1px solid var(--line);text-align:left;
+}
+.rows li:first-child .row{border-top:0}
+.row h3{font-size:18px}
+.row p{color:var(--sub);font-size:13.5px}
+.stairs{display:block;width:84px;height:44px}
+.stairs.big{width:132px;height:64px}
+.st-done{fill:var(--ai)}
+.st-now{fill:var(--gold)}
+.st-todo{fill:none;stroke:var(--line);stroke-width:1}
+
+/* 記録 */
+.log{list-style:none;margin:0;padding:0}
+.log li{padding:12px 0;border-top:1px solid var(--line)}
+.log li:first-child{border-top:0}
+.log h3{font-size:17px;display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.log h3 small{font-family:var(--gothic);font-weight:400;font-size:13px;color:var(--sub)}
+.log dl{margin:6px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 14px;font-size:14px}
+.log dt{color:var(--sub)}
+.log dd{margin:0}
+
+/* 種目画面 */
+.bar{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:2px solid var(--ink)}
+.bar p{font-family:var(--mincho);font-size:17px}
+.ex-head{padding:24px 0 6px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end}
+.ex-head h2{font-size:30px}
+.ex-head p{color:var(--sub);font-size:14px;margin-top:4px}
+.aim{margin:16px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:15px}
+.aim dt{color:var(--sub)}
+.aim dd{margin:0}
+details.how{margin-top:16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+details.how summary{padding:12px 0;font-family:var(--mincho);font-size:17px;cursor:pointer}
+details.how ol{margin:0 0 12px;padding-left:1.4em}
+details.how li{margin-bottom:4px}
+.caution{margin:0 0 12px;padding:10px 12px;border-left:4px solid var(--warn);background:var(--surface);font-size:14.5px}
+.basis{margin:0 0 14px;color:var(--sub);font-size:14px}
+.basis a{color:var(--ai)}
+
+.sets{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.sets li{border-top:4px solid var(--line);padding-top:6px;text-align:center;font-size:13px;color:var(--sub)}
+.sets li b{display:block;font-family:var(--mincho);font-size:26px;font-weight:600;color:var(--ink);line-height:1.3;min-height:34px}
+.sets li.done{border-top-color:var(--ai)}
+.sets li.now{border-top-color:var(--gold)}
+.sets li:not(.done) b{color:var(--sub);font-weight:400}
+
+.entry{margin-top:22px;padding:18px;background:var(--surface);border-radius:8px}
+.entry h3{font-size:18px;text-align:center}
+.entry .target{text-align:center;color:var(--sub);font-size:14.5px}
+.stepper{display:grid;grid-template-columns:64px 1fr 64px;align-items:center;gap:10px;margin:10px 0 14px}
+.stepper button{height:64px;border:1.5px solid var(--ink);border-radius:6px;background:transparent;font-size:30px;line-height:1}
+.stepper output{text-align:center;font-family:var(--mincho);font-size:72px;font-weight:600;line-height:1}
+.stepper output small{font-size:20px;font-weight:400;margin-left:4px}
+.hold{text-align:center;padding:6px 0 14px}
+.hold output{display:block;font-family:var(--mincho);font-size:96px;font-weight:600;line-height:1.1}
+.hold p{color:var(--sub)}
+
+.result{margin-top:22px;padding:18px;background:var(--surface);border-radius:8px}
+.result h3{font-size:22px}
+.result .up{margin:14px 0;padding:12px 14px;border-left:4px solid var(--gold);background:var(--paper)}
+.result .up h4{margin:0 0 4px;font-family:var(--mincho);font-size:18px;font-weight:600}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.pair .btn{margin:0;padding:10px 6px}
+.pair .btn strong{font-size:17px;white-space:nowrap}
+
+/* 休憩 */
+.rest{
+  position:fixed;inset:0;z-index:10;background:var(--ai);color:var(--on-ai);
+  display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;
+  padding:24px;text-align:center;
+}
+.rest h2{font-size:22px;letter-spacing:.3em;margin-right:-.3em}
+.rest output{font-family:var(--mincho);font-weight:600;font-size:clamp(104px,36vw,220px);line-height:1}
+.rest p{font-size:17px;max-width:22em}
+.rest .ctl{display:flex;gap:10px;margin-top:22px}
+.rest .ctl button{min-height:52px;padding:8px 20px;background:transparent;border:1.5px solid currentColor;border-radius:26px}
+
+/* 段の詳細 */
+.levels{list-style:none;margin:0;padding:0;counter-reset:dan}
+.levels > li{counter-increment:dan;padding:16px 0 16px 46px;border-top:1px solid var(--line);position:relative}
+.levels > li::before{
+  content:counter(dan);position:absolute;left:0;top:16px;width:32px;height:32px;border-radius:50%;
+  border:1.5px solid var(--line);text-align:center;line-height:29px;font-family:var(--mincho);font-size:17px;
+}
+.levels > li.cur::before{background:var(--gold);border-color:var(--gold);color:#18212B;font-weight:600}
+.levels > li.past::before{background:var(--ai);border-color:var(--ai);color:var(--on-ai)}
+.levels h3{font-size:19px}
+.levels .aimline{color:var(--sub);font-size:14px}
+.levels details.how{border-bottom:0;margin-top:8px}
+.tag{display:inline-block;margin-left:8px;padding:0 8px;border-radius:10px;background:var(--gold);color:#18212B;font-family:var(--gothic);font-size:12px;font-weight:600;vertical-align:middle}
+
+.settings label{display:block;margin-top:14px;font-size:15px}
+.sources{margin:8px 0 0;padding-left:1.2em;font-size:14px}
+.sources a{color:var(--ai)}
+.done-head{padding:40px 0 10px}
+.done-head h2{font-size:34px}
+[hidden]{display:none !important}
+@media (prefers-reduced-motion:no-preference){
+  .sets li{transition:border-color .25s}
+}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+
+<script>
+/* =====================================================================
+   種目の段（やさしい順）。range は 1セットあたりの目安 [下限, 上限]。
+   全セットで上限に届いたら、次の段に進む。
+   ev は根拠。実測した研究を確認できた段にだけ付けている。
+   ===================================================================== */
+const SRC = {
+  ebben: {label:'Ebben ほか 2011（腕立ての種類ごとの荷重）', url:'https://journals.lww.com/nsca-jscr/fulltext/2011/10000/kinetic_analysis_of_several_variations_of_push_ups.31.aspx'},
+  kotarsky: {label:'Kotarsky ほか 2018（段階的な腕立てとベンチプレスの比較）', url:'https://www.researchgate.net/publication/321297726_Effect_of_Progressive_Calisthenic_Push-Up_Training_On_Muscle_Strength_and_Thickness'},
+  suspension: {label:'サスペンション種目の荷重 2023（PLOS ONE）', url:'https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0291608'},
+  rfess: {label:'ブルガリアンスクワットの荷重配分（Sportsmith の解説）', url:'https://www.sportsmith.co/articles/the-rear-foot-elevated-split-squat/'},
+  plank: {label:'Schoenfeld ほか 2014（ロングレバー・プランクの筋電図）', url:'https://www.tandfonline.com/doi/abs/10.1080/14763141.2014.942355'},
+  freq: {label:'Schoenfeld ほか 2016（頻度と筋肥大）', url:'https://www.researchgate.net/publication/301578131_Effects_of_Resistance_Training_Frequency_on_Measures_of_Muscle_Hypertrophy_A_Systematic_Review_and_Meta-Analysis'}
+};
+
+const TRACKS = {
+  push: {
+    name:'腕立て', part:'胸、肩の前、二の腕',
+    basis:'1〜3段目は、手にかかる体重を床反力計で測った研究の順番です。4段目以降は実測した研究を確認できていません。動作を遅くする、片腕に寄せるという一般的な負荷の上げ方に沿って並べています。',
+    src:['ebben','kotarsky'],
+    levels:[
+      {name:'腕立て伏せ', range:[10,20],
+       how:['手を肩幅よりやや広く置き、指先を前に向ける。','頭からかかとまでを一直線にして、お腹とお尻に力を入れる。','肘を体から45度ほど開き、胸が床に触れる手前まで下ろす。','腰を反らせず、同じ姿勢のまま押し上げる。'],
+       ev:'手で支えるのは体重の約64%。'},
+      {name:'足上げ腕立て（低い台）', range:[8,15],
+       how:['高さ30cmほどの滑らない台に両足のつま先を乗せる。','手は肩幅よりやや広く。体を一直線に保つ。','胸が床に触れる手前まで下ろし、押し上げる。','お尻が上がったり腰が落ちたりしたら、そこで終える。'],
+       ev:'約30cmの台で、手にかかるのは体重の約70%。'},
+      {name:'足上げ腕立て（椅子）', range:[8,15],
+       how:['椅子を壁につけて動かないようにし、座面に両足のつま先を乗せる。','手は肩幅よりやや広く。頭からかかとまで一直線。','胸が床に触れる手前まで下ろし、押し上げる。','肩がすくまないよう、首を長く保つ。'],
+       ev:'約61cmの台で体重の約74%。椅子の座面は40〜45cmほどなので、70〜74%の間と考えられます。'},
+      {name:'足上げ腕立て（3秒で下ろす）', range:[8,12],
+       how:['椅子に足を乗せた腕立ての姿勢をとる。','心の中で3つ数えながら、ゆっくり下ろす。','下で止めずに、普通の速さで押し上げる。','下ろす速さが保てなくなったら、そこで終える。']},
+      {name:'足上げ腕立て（3秒で下ろし、下で1秒止める）', range:[6,12],
+       how:['椅子に足を乗せた腕立ての姿勢をとる。','3つ数えながら下ろす。','胸が床に触れる手前で、力を抜かずに1秒止める。','反動を使わずに押し上げる。']},
+      {name:'アーチャー・プッシュアップ', range:[5,10], side:true,
+       how:['足は床に置き、手幅を肩幅の倍ほどに広げる。','片方の肘を曲げながら、そちら側に体を寄せて下ろす。反対の腕は伸ばしたまま添える。','曲げた側の腕で押し上げる。','片側を続けてやってから、反対側を同じ回数やる。']}
+    ]
+  },
+  legs: {
+    name:'片足スクワット', part:'もも、お尻',
+    basis:'両足から片足へ、支える脚の負担を少しずつ増やす順番です。ブルガリアンスクワットで後ろ足が受け持つ力は全体の約15%という計測があります。5段目以降の順番は、しゃがむ深さを増やすという一般的な考え方によります。',
+    src:['rfess'],
+    levels:[
+      {name:'スクワット', range:[15,25],
+       how:['足を肩幅に開き、つま先をやや外に向ける。','椅子に座るようにお尻を後ろへ引きながら、ももが床と平行になるまでしゃがむ。','膝がつま先と同じ方向を向くようにする。','かかとで床を押して立ち上がる。']},
+      {name:'スプリットスクワット', range:[10,15], side:true,
+       how:['足を前後に大きく開いて立つ。','上体を立てたまま、後ろの膝が床に触れる手前まで真下に沈む。','前足のかかとで床を押して立ち上がる。','片側を続けてやってから、足を入れ替える。']},
+      {name:'ブルガリアンスクワット', range:[8,15], side:true,
+       how:['椅子の前に、椅子に背を向けて立つ。片足の甲を座面に乗せる。','前足は椅子から大股1歩ぶん前に置く。','上体をやや前に傾け、前のももが床と平行になるまで沈む。','前足のかかとで押して立ち上がる。後ろ足では蹴らない。'],
+       ev:'後ろ足が受け持つのは全体の約15%で、ほぼ前の脚だけで支えます。'},
+      {name:'ブルガリアンスクワット（下で2秒止める）', range:[8,12], side:true,
+       how:['ブルガリアンスクワットの姿勢をとる。','前のももが床と平行になるまで沈む。','一番下で、力を抜かずに2秒止める。','反動を使わずに立ち上がる。']},
+      {name:'椅子への片足スクワット', range:[6,10], side:true,
+       how:['椅子の前に立ち、片足を床から浮かせて前に伸ばす。','両腕を前に出してバランスをとり、片足だけでゆっくり座面にお尻を下ろす。','座面に軽く触れたら、体重を預けきらずに片足で立ち上がる。','膝が内側に入らないよう、つま先と同じ向きを保つ。']},
+      {name:'低い台への片足スクワット', range:[5,10], side:true,
+       how:['椅子より低い台（高さ30cmほど）の前に立つ。','片足を浮かせ、片足だけで台にお尻が触れるまでしゃがむ。','触れたらすぐ、片足で立ち上がる。','かかとが浮くなら、台を少し高くする。']},
+      {name:'ピストルスクワット', range:[3,8], side:true,
+       how:['片足を前に伸ばして床から浮かせる。','両腕を前に出し、片足だけでお尻がかかとに近づくまでしゃがむ。','かかとを床につけたまま、片足で立ち上がる。','ふらつく間は、柱やドア枠に指を添えてよい。']}
+    ]
+  },
+  row: {
+    name:'タオルロウ', part:'背中、腕の表',
+    basis:'体を床に近づけるほど、腕にかかる体重が増えます。吊り具を使った研究では、床に対して約21度まで倒すと体重の約58%がかかりました。ドアとタオルでの実測ではないので、数値は目安です。',
+    src:['suspension'],
+    caution:'必ず、引くと閉まる側に立ってください。開く側でやると、ドアごと後ろに倒れます。ノブがぐらつくドアや、鍵のかからない軽いドアでは行わないでください。',
+    levels:[
+      {name:'タオルロウ（浅く倒す）', range:[10,15],
+       how:['閉めたドアの両側のノブに、丈夫なバスタオルを掛ける。両端を握る。','ドアから足1つぶん離れて立ち、腕が伸びるまで体を後ろに倒す。','体を一直線にしたまま、肘を後ろへ引いて胸をドアに近づける。','肩甲骨を寄せて1秒止め、ゆっくり戻す。']},
+      {name:'タオルロウ（深く倒す）', range:[10,15],
+       how:['つま先をドアの下端につける。','タオルの端を握り、腕が伸びるまで深く体を後ろに倒す。膝は軽く曲げてよい。','体を一直線にしたまま、肘を後ろへ引いて胸を手に近づける。','肩甲骨を寄せて1秒止め、ゆっくり戻す。'],
+       ev:'床に近い角度ほど、腕にかかる体重が増えます。'},
+      {name:'タオルロウ（深く倒し、引ききって2秒止める）', range:[8,12],
+       how:['つま先をドアの下端につけ、深く体を倒す。','肘を後ろへ引いて、胸を手に近づける。','引ききった位置で、肩甲骨を寄せたまま2秒止める。','3つ数えながら戻す。']},
+      {name:'片手タオルロウ', range:[6,12], side:true,
+       how:['タオルの両端をまとめて片手で握る。反対の手は腰に当てる。','つま先をドアの下端近くに置き、腕が伸びるまで体を倒す。','体がねじれないようにしながら、肘を後ろへ引く。','片側を続けてやってから、手を替える。']}
+    ]
+  },
+  pike: {
+    name:'パイク・プッシュアップ', part:'肩',
+    basis:'腰を手の真上に近づけるほど、腕で支える体重が増えるという考え方で並べています。この種目の荷重を実測した研究は確認できていません。',
+    src:[],
+    levels:[
+      {name:'パイク・プッシュアップ', range:[6,12],
+       how:['腕立ての姿勢から、足を手のほうへ歩かせて腰を高く上げる。体が「へ」の字になる。','手は肩幅。頭を両手より少し前の床に向けて下ろす。','頭のてっぺんが床に触れる手前で止める。','肘を外に開きすぎず、床を押して戻る。']},
+      {name:'パイク・プッシュアップ（3秒で下ろす）', range:[6,10],
+       how:['パイク・プッシュアップの姿勢をとる。','3つ数えながら、頭を床に近づける。','下で止めずに、普通の速さで押し上げる。','腰の高さが下がってきたら、そこで終える。']},
+      {name:'足上げパイク・プッシュアップ', range:[5,10],
+       how:['椅子を壁につけ、座面に両足のつま先を乗せる。','手を椅子のほうへ歩かせて、腰を手の真上近くまで上げる。','頭を両手より少し前の床に向けて下ろす。','床を押して戻る。首に体重を乗せない。']},
+      {name:'足上げパイク・プッシュアップ（3秒で下ろす）', range:[5,8],
+       how:['足上げパイク・プッシュアップの姿勢をとる。','3つ数えながら、頭を床に近づける。','普通の速さで押し上げる。','腕が震えて速さを保てなくなったら終える。']}
+    ]
+  },
+  hip: {
+    name:'ヒップリフト', part:'お尻、ももの裏',
+    basis:'両足から片足へ、さらに動く幅を広げる順番です。この順番を直接比べた研究は確認できていません。',
+    src:[],
+    levels:[
+      {name:'ヒップリフト', range:[15,20],
+       how:['仰向けになり、膝を立てる。かかとはお尻から手のひら1つぶん離す。','かかとで床を押し、肩から膝までが一直線になるまでお尻を上げる。','上でお尻を締めて1秒止める。','腰を反らせず、ゆっくり下ろす。']},
+      {name:'片足ヒップリフト', range:[10,15], side:true,
+       how:['仰向けで膝を立て、片足を床から浮かせて伸ばす。','床についた足のかかとで押し、お尻を上げる。','骨盤が傾かないよう、左右の腰骨を同じ高さに保つ。','片側を続けてやってから、足を替える。']},
+      {name:'片足ヒップリフト（上で2秒止める）', range:[10,12], side:true,
+       how:['片足ヒップリフトの姿勢をとる。','お尻を上げきったところで、締めたまま2秒止める。','3つ数えながら下ろす。','床にお尻をつけきらずに、次の回に入る。']},
+      {name:'片足ヒップスラスト（肩を椅子に乗せる）', range:[8,15], side:true,
+       how:['椅子を壁につける。肩甲骨の下あたりを座面の縁に乗せ、膝を立てて座る。','片足を浮かせる。あごを軽く引く。','床についた足のかかとで押し、ももと胴が一直線になるまでお尻を上げる。','上で1秒止め、お尻が床に触れる手前まで下ろす。']}
+    ]
+  },
+  upper: {
+    name:'Yレイズ', part:'肩甲骨まわり',
+    basis:'負荷は軽めですが、道具なしで上背部を動かせる種目です。止める時間を延ばして難しくします。実測した研究は確認できていません。',
+    src:[],
+    levels:[
+      {name:'うつ伏せYレイズ', range:[12,15],
+       how:['うつ伏せになり、両腕を斜め前に伸ばして「Y」の字をつくる。親指を上に向ける。','額は床につけたまま、肩甲骨を下げて寄せながら両腕を床から持ち上げる。','上で1秒止め、ゆっくり下ろす。','腰を反らせて上げない。上がる高さは数センチでよい。']},
+      {name:'うつ伏せYレイズ（上で2秒止める）', range:[10,15],
+       how:['うつ伏せYレイズの姿勢をとる。','両腕を持ち上げ、上で2秒止める。','3つ数えながら下ろす。','腕を床につけきらずに、次の回に入る。']},
+      {name:'うつ伏せYレイズ（上で3秒止め、胸も少し浮かせる）', range:[10,12],
+       how:['うつ伏せで「Y」の字をつくる。','両腕と一緒に、みぞおちから上を少しだけ床から浮かせる。','肩甲骨を寄せたまま3秒止める。','3つ数えながら下ろす。腰に痛みが出たら2段目に戻す。']}
+    ]
+  },
+  core: {
+    name:'プランク', part:'お腹', unit:'sec',
+    basis:'2段目は、通常のプランクより腹直筋と外腹斜筋の活動が高かったという筋電図の研究にもとづいています。論文の本文は確認できておらず、要旨レベルの理解です。3段目は実測を確認できていません。',
+    src:['plank'],
+    levels:[
+      {name:'プランク', range:[45,60],
+       how:['肘を肩の真下に置き、つま先を立てる。','頭からかかとまでを一直線にする。','お腹をへこませ、お尻を締める。','腰が落ちたら、そこで終える。']},
+      {name:'ロングレバー・プランク', range:[30,45],
+       how:['肘を肩の真下ではなく、目の下あたりまで前に置く。','両肘の間を拳1つぶんまで狭める。','お尻を強く締め、骨盤を後ろに傾ける（尾てい骨を下に丸め込む）。','その姿勢が保てなくなったら終える。'],
+       ev:'通常のプランクより、腹直筋と外腹斜筋の活動が高かったという報告があります。'},
+      {name:'ロングレバー・プランク（片足を浮かせる）', range:[20,40],
+       how:['ロングレバー・プランクの姿勢をとる。','片足を床から数センチ浮かせる。','骨盤が回らないよう、腰を水平に保つ。','半分の時間で足を替える。']}
+    ]
+  }
+};
+
+const MENUS = {
+  A:{name:'筋トレA', items:[{track:'push',sets:4},{track:'legs',sets:3},{track:'row',sets:4},{track:'core',sets:2}]},
+  B:{name:'筋トレB', items:[{track:'pike',sets:3},{track:'push',sets:3},{track:'legs',sets:3},{track:'hip',sets:3},{track:'upper',sets:3}]}
+};
+const START_LEVELS = {push:2, legs:2, row:0, pike:0, hip:1, upper:0, core:0};
+const LIGHT = {walk:{label:'散歩した', mark:'歩'}, rest:{label:'完全に休んだ', mark:'休'}, hiit:{label:'HIITをやった', mark:'H'}};
+const WD = '日月火水木金土';
+
+/* ============================ 保存 ============================ */
+const KEY = 'dandan.v1';
+function fresh(){ return {levels:{...START_LEVELS}, history:[], days:{}, settings:{rest:90, sound:true}, draft:null}; }
+let memoryOnly = false;
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(!raw) return fresh();
+    return normalize(JSON.parse(raw));
+  }catch(e){ memoryOnly = true; return fresh(); }
+}
+function normalize(s){
+  const f = fresh();
+  if(!s || typeof s !== 'object') return f;
+  const out = {
+    levels:{...f.levels, ...(s.levels||{})},
+    history:Array.isArray(s.history) ? s.history : [],
+    days:(s.days && typeof s.days === 'object') ? s.days : {},
+    settings:{...f.settings, ...(s.settings||{})},
+    draft:s.draft || null
+  };
+  for(const k of Object.keys(TRACKS)){
+    const max = TRACKS[k].levels.length - 1;
+    out.levels[k] = Math.max(0, Math.min(max, Number(out.levels[k])||0));
+  }
+  return out;
+}
+function save(){
+  try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){ memoryOnly = true; }
+}
+let S = load();
+let V = {name:'home'};          // 画面：home / session / track / done
+let hold = null;                // プランクの計測
+let lastTickSec = null;
+let doneSummary = null;
+
+/* ============================ 小道具 ============================ */
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function iso(d){ const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function today(){ return iso(new Date()); }
+function parse(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function diffDays(a, b){ return Math.round((parse(a) - parse(b)) / 86400000); }
+function jdate(s){ const d = parse(s); return `${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`; }
+function mmss(sec){ sec = Math.max(0, Math.ceil(sec)); return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`; }
+function unitOf(track){ return TRACKS[track].unit === 'sec' ? '秒' : '回'; }
+function stepOf(track){ return TRACKS[track].unit === 'sec' ? 5 : 1; }
+function sum(a){ return a.reduce((x,y) => x+y, 0); }
+
+function stairs(n, cur, big){
+  const w = 12, g = 3, h = 6; let s = '';
+  for(let i = 0; i < n; i++){
+    const hh = h*(i+1);
+    s += `<rect x="${i*(w+g)+.5}" y="${h*n-hh+.5}" width="${w-1}" height="${hh-1}" class="${i<cur?'st-done':i===cur?'st-now':'st-todo'}"/>`;
+  }
+  return `<svg class="stairs${big?' big':''}" viewBox="0 0 ${n*(w+g)-g} ${h*n}" preserveAspectRatio="xMaxYMax meet" role="img" aria-label="全${n}段のうち${cur+1}段目">${s}</svg>`;
+}
+
+/* 同じ種目・同じ段の前回の記録 */
+function prevRecord(track, level){
+  for(let i = S.history.length-1; i >= 0; i--){
+    const it = S.history[i].items.find(x => x.track === track && x.level === level && x.sets.length);
+    if(it) return it.sets;
+  }
+  return null;
+}
+/* 今日の目標：前回の記録のうち、上限に届いていない最初のセットを1つだけ増やす */
+function targets(track, level, n){
+  const lv = TRACKS[track].levels[level], prev = prevRecord(track, level);
+  if(!prev) return null;
+  const t = [];
+  for(let i = 0; i < n; i++) t.push(Math.min(lv.range[1], prev[i] ?? prev[prev.length-1]));
+  const i = t.findIndex(v => v < lv.range[1]);
+  if(i >= 0) t[i] = Math.min(lv.range[1], t[i] + stepOf(track));
+  return t;
+}
+function lastStrength(){ return S.history.length ? S.history[S.history.length-1] : null; }
+
+/* ============================ 音・画面の点灯 ============================ */
+let actx = null;
+function beep(freq, dur){
+  if(!S.settings.sound) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    if(actx.state === 'suspended') actx.resume();
+    const o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+    o.type = 'sine'; o.frequency.value = freq; o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(.35, t+.015);
+    g.gain.exponentialRampToValueAtTime(.0001, t+dur);
+    o.start(t); o.stop(t+dur+.03);
+  }catch(e){}
+}
+document.addEventListener('click', () => {
+  if(!S.settings.sound) return;
+  try{ actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if(actx.state === 'suspended') actx.resume(); }catch(e){}
+}, true);
+function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+let wake = null;
+async function keepAwake(on){
+  try{
+    if(on && 'wakeLock' in navigator && !wake){ wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); }
+    if(!on && wake){ await wake.release(); wake = null; }
+  }catch(e){ wake = null; }
+}
+document.addEventListener('visibilitychange', () => { if(document.visibilityState === 'visible' && S.draft && V.name === 'session') keepAwake(true); });
+
+/* ============================ 画面：ホーム ============================ */
+function advice(){
+  const t = today(), last = lastStrength();
+  if(S.draft) return {text:`${MENUS[S.draft.menu].name}の途中の記録があります。`, pick:null};
+  if(!last) return {text:'最初の1回です。筋トレAから始めます。初回は各種目とも、きれいな形でできる限界の2回手前で止めて、その回数を記録してください。', pick:'A'};
+  const d = diffDays(t, last.date), other = last.menu === 'A' ? 'B' : 'A';
+  if(d <= 0) return {text:'今日の筋トレは記録済みです。あとは休むのも予定のうちです。', pick:null};
+  if(d <= 2) return {text:`前回の筋トレから中${d-1}日です。中2日あけるまでは軽い日にします。散歩で十分です。`, pick:null};
+  return {text:`前回は${jdate(last.date)}の${MENUS[last.menu].name}でした。今日は${MENUS[other].name}の日です。`, pick:other};
+}
+function weekCells(){
+  const now = new Date(), t = today();
+  const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay()+6)%7));
+  let h = '';
+  for(let i = 0; i < 7; i++){
+    const d = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()+i), k = iso(d);
+    const st = S.history.filter(x => x.date === k).map(x => x.menu);
+    const lt = S.days[k];
+    let cls = 'day', mark = '', say = '記録なし';
+    if(st.length){ cls += ' strength'; mark = st.join(''); say = '筋トレ' + st.join('と'); }
+    else if(lt && LIGHT[lt]){ cls += ' light'; mark = LIGHT[lt].mark; say = LIGHT[lt].label; }
+    if(k === t) cls += ' today';
+    h += `<div class="${cls}" aria-label="${WD[d.getDay()]}曜 ${say}"><b>${WD[d.getDay()]}</b><i>${esc(mark)}</i></div>`;
+  }
+  return h;
+}
+function menuLine(key){
+  return MENUS[key].items.map(it => TRACKS[it.track].name).join('、');
+}
+function viewHome(){
+  const a = advice(), t = today(), lt = S.days[t];
+  let h = `<header class="mast"><h1>段々</h1><p>自重トレーニングの記録</p></header>`;
+
+  h += `<section class="block"><h2>今日 ${jdate(t)}</h2><p class="lead">${esc(a.text)}</p><div style="margin-top:16px">`;
+  if(S.draft){
+    h += `<button class="btn primary" data-act="resume"><strong>続きから再開する</strong><span>${esc(MENUS[S.draft.menu].name)} ${S.draft.idx+1}種目め</span></button>
+          <button class="btn" data-act="discard"><strong>途中の記録を捨てる</strong></button>`;
+  }else{
+    for(const k of ['A','B']){
+      h += `<button class="btn${a.pick===k?' primary':''}" data-act="start" data-menu="${k}"><strong>${MENUS[k].name}を始める</strong><span>${esc(menuLine(k))}</span></button>`;
+    }
+  }
+  h += `</div><p class="fine" style="margin-top:18px">筋トレをしない日は、やったことを1つ選んで記録します。</p><div class="chips" style="margin-top:8px">`;
+  for(const k of Object.keys(LIGHT)){
+    h += `<button class="chip" data-act="light" data-kind="${k}" aria-pressed="${lt===k}">${LIGHT[k].label}</button>`;
+  }
+  h += `</div></section>`;
+
+  h += `<section class="block"><h2>今週</h2><div class="week">${weekCells()}</div>
+        <p class="fine" style="margin-top:10px">A・B は筋トレ、歩は散歩、休は完全休養、H は HIIT。筋トレ同士は中2日以上あけます。</p></section>`;
+
+  h += `<section class="block"><h2>いまの段</h2><ul class="rows">`;
+  for(const k of Object.keys(TRACKS)){
+    const tr = TRACKS[k], lv = S.levels[k];
+    h += `<li><button class="row" data-act="track" data-track="${k}">
+            <div><h3>${esc(tr.levels[lv].name)}</h3><p>${esc(tr.name)}の${lv+1}段目（全${tr.levels.length}段）</p></div>${stairs(tr.levels.length, lv)}
+          </button></li>`;
+  }
+  h += `</ul><p class="fine">種目を押すと、すべての段とやり方を見られます。段はそこで変えられます。</p></section>`;
+
+  h += `<section class="block"><h2>記録</h2>`;
+  if(!S.history.length){
+    h += `<p class="fine">まだ記録がありません。筋トレを1回終えると、ここに並びます。</p>`;
+  }else{
+    h += `<ul class="log">`;
+    for(const s of S.history.slice().reverse().slice(0, 12)){
+      h += `<li><h3>${jdate(s.date)} ${esc(MENUS[s.menu].name)}<small>${s.min ? s.min+'分' : ''}</small></h3><dl>`;
+      for(const it of s.items){
+        const tr = TRACKS[it.track]; if(!tr || !it.sets.length) continue;
+        h += `<dt>${esc(tr.levels[it.level].name)}</dt><dd class="num">${it.sets.join('、')}${unitOf(it.track)}</dd>`;
+      }
+      h += `</dl><button class="link danger" data-act="delete" data-id="${s.id}">この日の記録を消す</button></li>`;
+    }
+    h += `</ul>`;
+  }
+  h += `</section>`;
+
+  h += `<section class="block settings"><h2>設定</h2>
+    <p class="fine">セット間の休憩</p><div class="chips" style="margin-top:6px">`;
+  for(const r of [60, 90, 120, 150]) h += `<button class="chip num" data-act="rest" data-sec="${r}" aria-pressed="${S.settings.rest===r}">${r}秒</button>`;
+  h += `</div><p class="fine" style="margin-top:14px">合図の音</p><div class="chips" style="margin-top:6px">
+      <button class="chip" data-act="sound" data-on="1" aria-pressed="${S.settings.sound}">鳴らす</button>
+      <button class="chip" data-act="sound" data-on="0" aria-pressed="${!S.settings.sound}">鳴らさない</button></div>
+    <p class="fine" style="margin-top:14px">記録はこの端末のブラウザの中だけに保存されます。機種変更やブラウザのデータ消去に備えて、ときどき書き出してください。</p>
+    ${memoryOnly ? '<p class="caution" style="margin-top:10px">このブラウザでは保存ができません。プライベートブラウズを解除するか、別のブラウザで開いてください。</p>' : ''}
+    <div style="margin-top:8px"><button class="link" data-act="export">記録をファイルに書き出す</button></div>
+    <div><button class="link" data-act="import">ファイルから記録を読み込む</button></div>
+  </section>`;
+
+  h += `<section class="block" style="border-bottom:0"><h2>根拠とことわり</h2>
+    <p class="fine">段の順番は、荷重や筋活動を実測した研究がある部分はそれに従い、ない部分は一般的な負荷の上げ方（動作を遅くする、止める、片側に寄せる）で並べています。どちらなのかは各種目の画面に書いてあります。痛みが出た種目は中止してください。</p>
+    <ul class="sources">${Object.values(SRC).map(s => `<li><a href="${s.url}" target="_blank" rel="noopener">${esc(s.label)}</a></li>`).join('')}</ul>
+  </section>`;
+  return h;
+}
+
+/* ============================ 画面：段の詳細 ============================ */
+function howBlock(tr, lv, open){
+  return `<details class="how"${open?' open':''}><summary>やり方</summary>
+    <ol>${lv.how.map(x => `<li>${esc(x)}</li>`).join('')}</ol>
+    ${lv.side ? '<p class="basis">左右それぞれ、同じ回数をやって1セットです。</p>' : ''}
+    ${tr.caution ? `<p class="caution">${esc(tr.caution)}</p>` : ''}
+    ${lv.ev ? `<p class="basis">${esc(lv.ev)}</p>` : ''}
+  </details>`;
+}
+function aimText(track, lv){
+  const u = unitOf(track);
+  return `${lv.range[0]}〜${lv.range[1]}${u}${lv.side ? '（左右それぞれ）' : ''}`;
+}
+function viewTrack(){
+  const k = V.track, tr = TRACKS[k], cur = S.levels[k];
+  let h = `<header class="bar"><button class="link" data-act="back">戻る</button><p>${esc(tr.name)}の段</p></header>
+    <div class="ex-head"><div><h2>${esc(tr.name)}</h2><p>${esc(tr.part)}</p></div>${stairs(tr.levels.length, cur, true)}</div>
+    <p class="basis" style="margin-top:12px">${esc(tr.basis)}</p>`;
+  if(tr.src.length) h += `<ul class="sources" style="margin-bottom:14px">${tr.src.map(s => `<li><a href="${SRC[s].url}" target="_blank" rel="noopener">${esc(SRC[s].label)}</a></li>`).join('')}</ul>`;
+  h += `<p class="fine">全セットで目安の上限に届いたら、次の段に進みます。</p><ol class="levels" style="margin-top:14px">`;
+  tr.levels.forEach((lv, i) => {
+    const rec = prevRecord(k, i);
+    h += `<li class="${i===cur?'cur':i<cur?'past':''}">
+      <h3>${esc(lv.name)}${i===cur?'<span class="tag">いまここ</span>':''}</h3>
+      <p class="aimline num">目安 ${aimText(k, lv)}${rec ? `　前回 ${rec.join('、')}${unitOf(k)}` : ''}</p>
+      ${howBlock(tr, lv, i===cur)}
+      ${i!==cur ? `<button class="link" data-act="setlevel" data-track="${k}" data-level="${i}">この段に変える</button>` : ''}
+    </li>`;
+  });
+  h += `</ol>`;
+  return h;
+}
+
+/* ============================ 画面：筋トレ中 ============================ */
+function cur(){
+  const d = S.draft, menu = MENUS[d.menu], item = menu.items[d.idx];
+  const tr = TRACKS[item.track], level = d.levels[item.track], lv = tr.levels[level];
+  return {d, menu, item, tr, level, lv, done:d.sets[d.idx], n:item.sets, tg:targets(item.track, level, item.sets), prev:prevRecord(item.track, level), u:unitOf(item.track)};
+}
+function defaultEntry(c){
+  const i = c.done.length;
+  if(c.tg && c.tg[i] != null) return c.tg[i];
+  if(i > 0) return c.done[i-1];
+  return c.lv.range[0];
+}
+function viewSession(){
+  const c = cur(), {d, menu, item, tr, level, lv, done, n, tg, prev, u} = c;
+  let h = `<header class="bar"><button class="link" data-act="pause">中断する</button><p class="num">${esc(menu.name)}　${d.idx+1} / ${menu.items.length}</p></header>
+    <div class="ex-head"><div><h2>${esc(lv.name)}</h2><p>${esc(tr.name)}の${level+1}段目（全${tr.levels.length}段）</p><p>${esc(tr.part)}</p></div>${stairs(tr.levels.length, level, true)}</div>
+    <dl class="aim num">
+      <dt>目安</dt><dd>${aimText(item.track, lv)} × ${n}セット</dd>
+      <dt>次の段へ</dt><dd>${level < tr.levels.length-1 ? `全セットで${lv.range[1]}${u}` : 'ここが最上段です'}</dd>
+      <dt>前回</dt><dd>${prev ? `${prev.join('、')}${u}（合計${sum(prev)}${u}）` : 'この段では初めて'}</dd>
+    </dl>
+    ${howBlock(tr, lv, !prev)}
+    <button class="link" data-act="track" data-track="${item.track}">ほかの段を見る</button>
+    <ol class="sets">`;
+  for(let i = 0; i < n; i++){
+    const isDone = i < done.length, isNow = i === done.length && d.phase !== 'result';
+    h += `<li class="${isDone?'done':isNow?'now':''}"><b class="num">${isDone ? done[i] : (tg ? tg[i] : '−')}</b>${isDone ? `${i+1}セットめ` : (tg ? '目標' : `${i+1}セットめ`)}</li>`;
+  }
+  h += `</ol>`;
+
+  if(d.phase === 'result'){
+    h += resultCard(c);
+  }else{
+    const i = done.length;
+    h += `<div class="entry"><h3>${i+1}セットめ</h3>`;
+    if(tg) h += `<p class="target num">今日の目標は${tg[i]}${u}。届かなくても、できた数をそのまま記録します。</p>`;
+    else h += `<p class="target">初回は、きれいな形でできる限界の2${u==='回'?'回':'〜3秒'}手前で止めます。</p>`;
+    if(hold){
+      h += `<div class="hold"><output id="holdOut" class="num">0</output><p id="holdMsg">用意</p></div>
+            <button class="btn primary center" data-act="holdstop"><strong>止める</strong></button>`;
+    }else{
+      h += `<div class="stepper"><button data-act="minus" aria-label="減らす">−</button>
+              <output class="num" id="entryOut">${d.entry}<small>${u}</small></output>
+              <button data-act="plus" aria-label="増やす">＋</button></div>`;
+      if(tr.unit === 'sec') h += `<button class="btn center" data-act="holdstart" style="margin-bottom:10px"><strong>秒数を計る</strong><span>3秒の合図のあとに始まります</span></button>`;
+      h += `<button class="btn primary center" data-act="record"><strong>${d.entry}${u}で記録する</strong><span>${i+1 < n ? `休憩${S.settings.rest}秒が始まります` : 'この種目の最後のセットです'}</span></button>`;
+    }
+    if(i > 0 && !hold) h += `<div style="text-align:center"><button class="link" data-act="undo">前のセットを取り消す</button></div>`;
+    h += `</div>`;
+  }
+  if(d.phase === 'rest') h += restOverlay(c);
+  return h;
+}
+function resultCard(c){
+  const {d, menu, item, tr, level, lv, done, prev, u} = c;
+  const total = sum(done), last = d.idx === menu.items.length-1;
+  let line = `合計${total}${u}。`;
+  if(prev){
+    /* AとBでセット数が違う種目があるので、同じセット数ぶんだけを比べる */
+    const k = Math.min(done.length, prev.length), dv = sum(done.slice(0, k)) - sum(prev.slice(0, k));
+    const head = k < Math.max(done.length, prev.length) ? `はじめの${k}セットで比べると、` : '';
+    line += head + (dv > 0 ? `前回より${dv}${u}多くできました。` : dv === 0 ? '前回と同じです。' : `前回より${-dv}${u}少なめでした。疲れが残っている日はそうなります。`);
+  }else{
+    line += 'これが次回の基準になります。';
+  }
+  let h = `<div class="result"><h3>${esc(lv.name)}を終えました</h3><p class="num">${line}</p>`;
+  const canUp = level < tr.levels.length-1 && done.every(v => v >= lv.range[1]);
+  const below = level > 0 && done[0] < lv.range[0];
+  if(d.stay && d.stay[item.track]){
+    h += `<div class="up"><p>この段をもう1回やります。</p></div>`;
+  }else if(d.moved && d.moved[item.track] != null){
+    h += `<div class="up"><h4>次回から${d.moved[item.track]+1}段目にします</h4><p>${esc(tr.levels[d.moved[item.track]].name)}</p><button class="link" data-act="keeplevel">やっぱり今の段のままにする</button></div>`;
+  }else if(canUp){
+    const nx = tr.levels[level+1];
+    h += `<div class="up"><h4>全セットで上限に届きました</h4><p>次の段は「${esc(nx.name)}」、目安は${aimText(item.track, nx)}です。</p>
+          <div class="pair"><button class="btn center" data-act="levelup"><strong>次回から進む</strong></button><button class="btn center" data-act="noop"><strong>もう1回この段</strong></button></div></div>`;
+  }else if(below){
+    const pv = tr.levels[level-1];
+    h += `<div class="up"><h4>1セットめが下限に届きませんでした</h4><p>今の段がまだ重い場合は、1つ前の「${esc(pv.name)}」に戻せます。体調のせいなら、そのままで構いません。</p>
+          <button class="link" data-act="leveldown">次回から1段戻す</button></div>`;
+  }
+  h += `<button class="btn primary center" data-act="next" style="margin-top:14px"><strong>${last ? '記録を保存して終わる' : '次の種目へ進む'}</strong><span>${last ? '' : `休憩${S.settings.rest}秒のあと、${esc(TRACKS[menu.items[d.idx+1].track].levels[d.levels[menu.items[d.idx+1].track]].name)}`}</span></button>
+        <div style="text-align:center"><button class="link" data-act="undo">最後のセットを取り消す</button></div></div>`;
+  return h;
+}
+function restOverlay(c){
+  const {d, lv, done, tg, u} = c, i = done.length;
+  const left = (d.restEnd - Date.now()) / 1000;
+  const next = `${esc(lv.name)} ${i+1}セットめ${tg ? `、目標${tg[i]}${u}` : ''}`;
+  return `<div class="rest" role="dialog" aria-label="休憩"><h2>休憩</h2>
+    <output id="restOut" class="num">${mmss(left)}</output>
+    <p>次は ${next}</p>
+    <div class="ctl"><button data-act="restadd">15秒のばす</button><button data-act="restskip">休憩を終える</button></div></div>`;
+}
+
+/* ============================ 画面：終了 ============================ */
+function viewDone(){
+  const s = doneSummary;
+  let h = `<div class="done-head"><h2>お疲れさまでした</h2><p class="lead">${jdate(s.date)}の${esc(MENUS[s.menu].name)}を記録しました。${s.min ? `かかった時間は${s.min}分です。` : ''}</p></div>
+    <section class="block"><ul class="log">`;
+  for(const it of s.items){
+    if(!it.sets.length) continue;
+    h += `<li><h3>${esc(TRACKS[it.track].levels[it.level].name)}</h3><dl><dt>今日</dt><dd class="num">${it.sets.join('、')}${unitOf(it.track)}</dd></dl></li>`;
+  }
+  h += `</ul></section>
+    <section class="block" style="border-bottom:0"><p class="lead">次の筋トレは中2日あけてから。それまでは散歩か休みが予定どおりの過ごし方です。</p>
+    <button class="btn primary center" data-act="home" style="margin-top:16px"><strong>はじめの画面に戻る</strong></button></section>`;
+  return h;
+}
+
+/* ============================ 描画と操作 ============================ */
+const app = document.getElementById('app');
+function render(keepScroll){
+  const y = window.scrollY;
+  if(V.name === 'session' && !S.draft) V = {name:'home'};
+  app.innerHTML = V.name === 'session' ? viewSession() : V.name === 'track' ? viewTrack() : V.name === 'done' ? viewDone() : viewHome();
+  window.scrollTo(0, keepScroll ? y : 0);
+}
+function startSession(menu){
+  S.draft = {menu, start:Date.now(), idx:0, sets:MENUS[menu].items.map(() => []), levels:{...S.levels}, phase:'work', restEnd:0, entry:0, moved:{}};
+  S.draft.entry = defaultEntry(cur());
+  save(); V = {name:'session'}; keepAwake(true); beep(660, .08); render();
+}
+function beginRest(){
+  const d = S.draft; d.phase = 'rest'; d.restEnd = Date.now() + S.settings.rest*1000; lastTickSec = null;
+}
+function endRest(sound){
+  const d = S.draft; d.phase = 'work'; d.entry = defaultEntry(cur()); save();
+  if(sound){ beep(1320, .5); buzz([200, 80, 200]); }
+  render();
+  const e = document.querySelector('.entry'); if(e && e.scrollIntoView) e.scrollIntoView({block:'center'});
+}
+function finish(){
+  const d = S.draft;
+  const entry = {
+    id:String(Date.now()), date:today(), menu:d.menu,
+    min:Math.max(1, Math.round((Date.now() - d.start) / 60000)),
+    items:MENUS[d.menu].items.map((it, i) => ({track:it.track, level:d.levels[it.track], sets:d.sets[i]}))
+  };
+  S.history.push(entry); S.draft = null; save();
+  doneSummary = entry; V = {name:'done'}; keepAwake(false); render();
+}
+
+app.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-act]'); if(!b) return;
+  const act = b.dataset.act, d = S.draft;
+  switch(act){
+    case 'start': startSession(b.dataset.menu); break;
+    case 'resume': V = {name:'session'}; keepAwake(true); if(d.phase === 'rest' && d.restEnd < Date.now()){ d.phase = 'work'; d.entry = defaultEntry(cur()); } render(); break;
+    case 'discard': if(confirm('途中の記録を捨てます。よろしいですか。')){ S.draft = null; save(); render(); } break;
+    case 'pause': hold = null; save(); V = {name:'home'}; keepAwake(false); render(); break;
+    case 'home': V = {name:'home'}; render(); break;
+    case 'light': { const t = today(); if(S.days[t] === b.dataset.kind) delete S.days[t]; else S.days[t] = b.dataset.kind; save(); render(true); break; }
+    case 'rest': S.settings.rest = Number(b.dataset.sec); save(); render(true); break;
+    case 'sound': S.settings.sound = b.dataset.on === '1'; save(); if(S.settings.sound) beep(880, .15); render(true); break;
+    case 'track': V = {name:'track', track:b.dataset.track, from:V.name}; render(); break;
+    case 'back': V = {name:(V.from === 'session' && S.draft) ? 'session' : 'home'}; render(); break;
+    case 'setlevel': {
+      const k = b.dataset.track, lv = Number(b.dataset.level);
+      if(!confirm(`${TRACKS[k].name}を${lv+1}段目「${TRACKS[k].levels[lv].name}」に変えます。`)) break;
+      S.levels[k] = lv;
+      if(d){ MENUS[d.menu].items.forEach((it, i) => { if(it.track === k && !d.sets[i].length){ d.levels[k] = lv; } }); if(d.phase === 'work') d.entry = defaultEntry(cur()); }
+      save(); render(true); break;
+    }
+    case 'delete': if(confirm('この日の記録を消します。元に戻せません。')){ S.history = S.history.filter(x => x.id !== b.dataset.id); save(); render(true); } break;
+    case 'export': exportData(); break;
+    case 'import': document.getElementById('importFile').click(); break;
+
+    case 'minus': d.entry = Math.max(0, d.entry - stepOf(cur().item.track)); save(); render(true); break;
+    case 'plus': d.entry = Math.min(999, d.entry + stepOf(cur().item.track)); save(); render(true); break;
+    case 'record': {
+      const c = cur(); c.done.push(d.entry); beep(660, .08);
+      if(c.done.length < c.n) beginRest(); else d.phase = 'result';
+      save(); render(d.phase === 'rest'); break;
+    }
+    case 'undo': { const c = cur(); if(c.done.length){ d.entry = c.done.pop(); d.phase = 'work'; if(d.moved) delete d.moved[c.item.track]; if(d.stay) delete d.stay[c.item.track]; S.levels[c.item.track] = d.levelsBefore?.[c.item.track] ?? S.levels[c.item.track]; save(); render(true); } break; }
+    case 'holdstart': hold = {prepEnd:Date.now() + 3000, startAt:null, hit:false}; lastTickSec = null; beep(660, .1); render(true); break;
+    case 'holdstop': { const sec = hold && hold.startAt ? Math.round((Date.now() - hold.startAt) / 1000) : 0; hold = null; if(sec > 0) d.entry = sec; beep(520, .2); save(); render(true); break; }
+    case 'levelup': changeLevel(+1); break;
+    case 'leveldown': changeLevel(-1); break;
+    case 'keeplevel': { const c = cur(); S.levels[c.item.track] = c.level; delete d.moved[c.item.track]; save(); render(true); break; }
+    case 'noop': d.stay = d.stay || {}; d.stay[cur().item.track] = true; save(); render(true); break;
+    case 'next': {
+      const c = cur();
+      if(d.idx === c.menu.items.length-1){ finish(); break; }
+      d.idx++; beginRest(); save(); render(); break;
+    }
+    case 'restadd': d.restEnd += 15000; lastTickSec = null; save(); tick(); break;
+    case 'restskip': endRest(false); break;
+  }
+});
+function changeLevel(dir){
+  const d = S.draft, c = cur(), k = c.item.track;
+  d.levelsBefore = d.levelsBefore || {}; d.levelsBefore[k] = c.level;
+  const to = Math.max(0, Math.min(c.tr.levels.length-1, c.level + dir));
+  S.levels[k] = to; d.moved[k] = to;
+  /* 同じ日のあとの種目で、まだ手を付けていない同じ種目は今日の段のまま行う */
+  if(dir > 0){ beep(880, .12); setTimeout(() => beep(1175, .25), 140); }
+  save(); render(true);
+}
+
+/* 休憩とプランクの時計。終了時刻との差で数えるので、画面が止まってもずれない */
+function tick(){
+  const d = S.draft;
+  if(!d || V.name !== 'session') return;
+  if(d.phase === 'rest'){
+    const left = (d.restEnd - Date.now()) / 1000, out = document.getElementById('restOut');
+    if(left <= 0){ endRest(true); return; }
+    const s = Math.ceil(left);
+    if(out) out.textContent = mmss(left);
+    if(s !== lastTickSec){ if(s <= 3 && lastTickSec !== null) beep(880, .1); lastTickSec = s; }
+  }else if(hold){
+    const out = document.getElementById('holdOut'), msg = document.getElementById('holdMsg'), now = Date.now();
+    if(!hold.startAt){
+      const left = Math.ceil((hold.prepEnd - now) / 1000);
+      if(left <= 0){ hold.startAt = now; lastTickSec = null; beep(1320, .3); if(msg) msg.textContent = '保つ'; if(out) out.textContent = '0'; }
+      else{ if(out) out.textContent = String(left); if(left !== lastTickSec){ if(lastTickSec !== null) beep(660, .1); lastTickSec = left; } }
+    }else{
+      const el = Math.floor((now - hold.startAt) / 1000), c = cur(), goal = c.tg ? c.tg[c.done.length] : c.lv.range[0];
+      if(out) out.textContent = String(el);
+      if(msg) msg.textContent = el >= goal ? `目標の${goal}秒を超えました` : `目標は${goal}秒`;
+      if(!hold.hit && el >= goal){ hold.hit = true; beep(1320, .4); buzz(300); }
+    }
+  }
+}
+setInterval(tick, 200);
+
+/* ============================ 書き出しと読み込み ============================ */
+function exportData(){
+  const blob = new Blob([JSON.stringify({app:'dandan', version:1, exported:new Date().toISOString(), data:S}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `dandan-${today()}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+document.getElementById('importFile').addEventListener('change', ev => {
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try{
+      const j = JSON.parse(r.result);
+      if(!j || j.app !== 'dandan' || !j.data) throw new Error('形式が違います');
+      if(!confirm(`書き出したファイルの内容で、いまの記録を置き換えます（筋トレ${(j.data.history||[]).length}回ぶん）。`)) return;
+      S = normalize(j.data); S.draft = null; save(); V = {name:'home'}; render();
+    }catch(e){ alert('読み込めませんでした。このアプリで書き出したファイルを選んでください。'); }
+    ev.target.value = '';
+  };
+  r.readAsText(f);
+});
+
+render();
+</script>
+</body>
+</html>
