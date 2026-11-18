@@ -1,0 +1,963 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>区切りタイマー</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: an instrument desk. The dial panel on the left; today's log, the week, the break sound and settings in a quiet column on the right. One column on phones. */
+:root{
+  --bg:#edf0f3;
+  --surface:#fafbfc;
+  --soft:#e3e9ef;
+  --ink:#17202a;
+  --muted:#586574;
+  --line:#d2d9e1;
+  --track:#e2e7ed;
+  --study:#2b5985;
+  --over:#995e13;
+  --rest:#2e7461;
+  --on-accent:#ffffff;
+  --font-ui:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",system-ui,sans-serif;
+  --font-num:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1319; --surface:#151c25; --soft:#1c2531; --ink:#e3e8ee; --muted:#94a1af;
+    --line:#27323e; --track:#222b36; --study:#80aad5; --over:#e1a54b; --rest:#6dbba2;
+    --on-accent:#0e1319; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1319; --surface:#151c25; --soft:#1c2531; --ink:#e3e8ee; --muted:#94a1af;
+  --line:#27323e; --track:#222b36; --study:#80aad5; --over:#e1a54b; --rest:#6dbba2;
+  --on-accent:#0e1319; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.65}
+.wrap{max-width:980px;margin:0 auto;padding-inline:20px;padding-block:28px 48px}
+
+.top{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px;margin-bottom:22px}
+h1{margin:0;font-size:1.4rem;font-weight:700;letter-spacing:.06em;text-wrap:balance}
+.tagline{margin:0;color:var(--muted);font-size:.9rem}
+
+.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:32px;align-items:start}
+@media (max-width:780px){.layout{grid-template-columns:minmax(0,1fr)}}
+
+/* timer panel */
+.panel{--accent-now:var(--study);min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.panel[data-mode="over"]{--accent-now:var(--over)}
+.panel[data-mode="break"],.panel[data-mode="restover"]{--accent-now:var(--rest)}
+
+.status{align-self:stretch;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 12px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:.82rem;font-weight:500;letter-spacing:.06em;padding:3px 12px 3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--accent-now)}
+.chip::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.panel[data-mode="idle"] .chip{color:var(--muted)}
+.panel:not([data-mode="idle"]) .chip::before{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.meta{font-size:.8rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.banner{align-self:stretch;margin:0;background:var(--soft);border-radius:8px;padding:8px 12px;font-size:.85rem}
+
+.dial{position:relative;width:min(100%,320px);max-width:100%;aspect-ratio:1}
+.dial svg{display:block;width:100%;height:100%}
+.track{stroke:var(--track);stroke-width:8}
+.prog{stroke:var(--accent-now);stroke-width:8;stroke-linecap:round;stroke-dasharray:628.32;stroke-dashoffset:628.32;transition:stroke-dashoffset .35s linear,stroke .3s}
+.tick{stroke:var(--line);stroke-width:1.5;stroke-linecap:round}
+.tick.major{stroke:var(--muted);stroke-width:2}
+.readout{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none;text-align:center}
+.digits{font-family:var(--font-num);font-weight:300;font-size:clamp(2.4rem,10vw,3.5rem);line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.digits.long{font-size:clamp(1.9rem,8vw,2.6rem)}
+.panel[data-mode="restover"] .digits{color:var(--rest)}
+.sub{font-family:var(--font-num);font-size:.85rem;color:var(--muted);min-height:1.4em;font-variant-numeric:tabular-nums}
+.panel[data-mode="over"] .sub{color:var(--over);font-weight:500}
+
+.hint{margin:0;text-align:center;color:var(--muted);font-size:.92rem;min-height:1.65em;max-width:34em;text-wrap:balance}
+
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+button{font-family:inherit;cursor:pointer}
+.btn{font-size:.95rem;font-weight:500;border-radius:10px;padding:11px 22px;min-width:9em;border:1px solid var(--line);background:transparent;color:var(--ink);transition:background .15s,border-color .15s}
+.btn:hover{background:var(--soft)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn:disabled:hover{background:transparent}
+.btn.primary{background:var(--accent-now);border-color:var(--accent-now);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.06);background:var(--accent-now)}
+.btn.small{padding:7px 12px;min-width:0;font-size:.85rem}
+.links{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px}
+.link{background:none;border:none;color:var(--muted);font-size:.82rem;text-decoration:underline;text-underline-offset:3px;padding:4px 6px;border-radius:6px}
+.link.armed{color:var(--over);font-weight:500}
+.notice{margin:0;min-height:1.4em;font-size:.85rem;color:var(--ink);text-align:center}
+
+button:focus-visible,input:focus-visible{outline:2px solid var(--study);outline-offset:2px}
+
+/* side column */
+.side{min-width:0;display:flex;flex-direction:column;gap:30px;padding-top:4px}
+h2{margin:0 0 10px;font-size:.8rem;font-weight:700;letter-spacing:.12em;color:var(--muted)}
+.h2row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 12px}
+.h2row h2{margin:0}
+.wtotal{font-size:.8rem;color:var(--muted)}
+.wtotal span{font-family:var(--font-num);color:var(--ink);font-variant-numeric:tabular-nums}
+
+.summary{display:flex;flex-wrap:wrap;gap:6px 28px;align-items:baseline}
+.num{font-family:var(--font-num);font-weight:500;font-size:2rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.unit{margin-left:4px;font-size:.9rem;color:var(--muted)}
+.hm{margin-left:8px;font-size:.8rem;color:var(--muted)}
+
+.sessions{list-style:none;margin:12px 0 0;padding:0}
+.sessions li{display:grid;grid-template-columns:7.5em minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.sessions li:last-child{border-bottom:1px solid var(--line)}
+.sessions .time{font-family:var(--font-num);font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.sessions .len{font-weight:500}
+.sessions li.running .len{color:var(--study)}
+.del{background:none;border:none;color:var(--muted);font-size:.8rem;padding:3px 8px;border-radius:6px}
+.del:hover{background:var(--soft);color:var(--ink)}
+.del.armed{color:var(--over);font-weight:500}
+.empty{margin:12px 0 0;color:var(--muted);font-size:.88rem}
+
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;align-items:end;margin-top:12px}
+.day{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;min-height:128px}
+.bar{display:block;width:100%;max-width:28px;background:var(--study);opacity:.38;border-radius:4px 4px 1px 1px}
+.bar.zero{background:var(--line);opacity:1}
+.day.today .bar{opacity:1}
+.val{font-family:var(--font-num);font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.dlabel{font-size:.75rem;color:var(--muted)}
+.day.today .dlabel{color:var(--ink);font-weight:700}
+
+/* break sound */
+.amb-name{margin:0;font-size:.92rem;overflow-wrap:anywhere}
+.amb-name.muted{color:var(--muted)}
+.amb-name::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:.1em;background:var(--line)}
+.amb-name.playing::before{background:var(--rest);animation:pulse 2.4s ease-in-out infinite}
+.amb-fields{margin-top:12px}
+.check{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink);cursor:pointer}
+.check input{width:16px;height:16px;margin:0;accent-color:var(--rest)}
+.amb-msg{margin:8px 0 0;min-height:1.3em;font-size:.82rem}
+.amb-note{margin:2px 0 0;font-size:.8rem;color:var(--muted)}
+
+.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field.wide{grid-column:1/-1}
+label{font-size:.82rem;color:var(--muted)}
+input[type="number"]{width:100%;font-family:var(--font-num);font-size:1rem;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+input[type="range"]{width:100%;accent-color:var(--study)}
+#amb-vol{accent-color:var(--rest)}
+.tests{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+.note{margin-top:34px;max-width:65ch;display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:.82rem}
+.note p{margin:0}
+
+@media (prefers-reduced-motion: reduce){
+  .prog{transition:none}
+  .panel:not([data-mode="idle"]) .chip::before,.amb-name.playing::before{animation:none}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <h1>区切りタイマー</h1>
+    <p class="tagline">目安の時間で一度だけ知らせて、休憩に入るタイミングは自分で決める</p>
+  </header>
+
+  <div class="layout">
+    <section class="panel" id="panel" data-mode="idle" aria-label="タイマー">
+      <div class="status">
+        <span class="chip" id="chip" aria-live="polite">待機中</span>
+        <span class="meta" id="meta">目安 25分 ・ 休憩 5分</span>
+      </div>
+
+      <p class="banner" id="audio-banner" hidden>ページを開き直したため、音が止まっています。画面のどこかを一度クリックすると、また鳴るようになります。</p>
+
+      <div class="dial">
+        <svg viewBox="0 0 240 240" aria-hidden="true">
+          <g id="ticks"></g>
+          <circle class="track" cx="120" cy="120" r="100" fill="none"></circle>
+          <circle class="prog" id="prog" cx="120" cy="120" r="100" fill="none" transform="rotate(-90 120 120)"></circle>
+        </svg>
+        <div class="readout">
+          <span class="digits" id="digits">00:00</span>
+          <span class="sub" id="sub"></span>
+        </div>
+      </div>
+
+      <p class="hint" id="hint"></p>
+
+      <div class="actions" id="act-idle">
+        <button type="button" class="btn primary" id="b-start">はじめる</button>
+      </div>
+      <div class="actions" id="act-study" hidden>
+        <button type="button" class="btn primary" id="b-break">休憩する</button>
+        <button type="button" class="btn" id="b-end">記録して終える</button>
+      </div>
+      <div class="actions" id="act-break" hidden>
+        <button type="button" class="btn primary" id="b-resume">勉強を再開</button>
+        <button type="button" class="btn" id="b-endbreak">ここで終える</button>
+      </div>
+      <div class="links">
+        <button type="button" class="link" id="discard" hidden>記録せずにやめる</button>
+        <button type="button" class="link" id="amb-stop" hidden>環境音を止める</button>
+      </div>
+      <p class="notice" id="notice" role="status" aria-live="polite"></p>
+    </section>
+
+    <aside class="side">
+      <section aria-labelledby="h-today">
+        <h2 id="h-today">今日の記録</h2>
+        <div class="summary">
+          <div><span class="num" id="t-count">0</span><span class="unit">回</span></div>
+          <div><span class="num" id="t-min">0</span><span class="unit">分</span><span class="hm" id="t-hm"></span></div>
+        </div>
+        <ul class="sessions" id="sessions"></ul>
+        <p class="empty" id="empty">まだ記録はありません。「はじめる」から「休憩する」までが1回分として、ここに残ります。</p>
+      </section>
+
+      <section aria-labelledby="h-week">
+        <div class="h2row">
+          <h2 id="h-week">直近7日（分）</h2>
+          <span class="wtotal">合計 <span id="w-total">0分</span></span>
+        </div>
+        <div class="week" id="week"></div>
+      </section>
+
+      <section aria-labelledby="h-amb">
+        <h2 id="h-amb">休憩中の環境音</h2>
+        <p class="amb-name muted" id="amb-name">まだ選ばれていません</p>
+        <div class="tests">
+          <button type="button" class="btn small" id="amb-pick">ファイルを選ぶ</button>
+          <button type="button" class="btn small" id="amb-preview" disabled>試聴</button>
+          <button type="button" class="btn small" id="amb-clear" disabled>解除</button>
+        </div>
+        <input type="file" id="amb-file" accept="audio/*,.mp3,.m4a,.aac,.wav" hidden>
+        <div class="fields amb-fields">
+          <div class="field wide">
+            <label class="check" for="amb-on"><input type="checkbox" id="amb-on">休憩中に流す</label>
+          </div>
+          <div class="field wide">
+            <label for="amb-vol">環境音の音量</label>
+            <input id="amb-vol" type="range" min="0" max="1" step="0.05">
+          </div>
+        </div>
+        <p class="amb-msg" id="amb-msg" role="status" aria-live="polite"></p>
+        <p class="amb-note">選んだファイルはこのブラウザの中にだけ保存され、外には送られません。休憩が終わる3秒ほど前から小さくなり、終了の音と一緒に止まります。</p>
+      </section>
+
+      <section aria-labelledby="h-set">
+        <h2 id="h-set">設定</h2>
+        <div class="fields">
+          <div class="field">
+            <label for="s-target">目安の時間（分）</label>
+            <input id="s-target" type="number" min="1" max="180" step="1" inputmode="numeric">
+          </div>
+          <div class="field">
+            <label for="s-rest">休憩の時間（分）</label>
+            <input id="s-rest" type="number" min="1" max="60" step="1" inputmode="numeric">
+          </div>
+          <div class="field wide">
+            <label for="s-vol">知らせる音の音量</label>
+            <input id="s-vol" type="range" min="0" max="1" step="0.05">
+          </div>
+        </div>
+        <div class="tests">
+          <button type="button" class="btn small" id="test-target">目安の音を試す</button>
+          <button type="button" class="btn small" id="test-rest">休憩終了の音を試す</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="note">
+    <p>記録はこのブラウザの中だけに保存されます。ブラウザのデータを消すと記録と環境音の設定も消え、ほかの端末とは共有されません。</p>
+    <p>1分未満の勉強は記録しません。スペースキーで、いま色の付いているボタン（はじめる・休憩する・勉強を再開）を押せます。</p>
+    <p>ほかのタブやアプリを前面にしていると、ブラウザによっては音が遅れたり鳴らなかったりします。</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(s){ return document.querySelector(s); };
+  var KEY = { settings: "kugiri.settings", state: "kugiri.state", log: "kugiri.log" };
+  var store = {
+    get: function(k, d){ try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+    set: function(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  };
+  function clamp(n, lo, hi){ return Math.min(hi, Math.max(lo, n)); }
+  function num(v, d){ var n = Number(v); return isFinite(n) ? n : d; }
+
+  /* ---------- data ---------- */
+  var saved = store.get(KEY.settings, {}) || {};
+  var settings = {
+    target: clamp(Math.round(num(saved.target, 25)), 1, 180),
+    rest: clamp(Math.round(num(saved.rest, 5)), 1, 60),
+    volume: clamp(num(saved.volume, 0.6), 0, 1),
+    ambientOn: saved.ambientOn !== false,
+    ambientVolume: clamp(num(saved.ambientVolume, 0.5), 0, 1)
+  };
+
+  var state = store.get(KEY.state, null);
+  if (!state || ["idle","study","break"].indexOf(state.mode) < 0 ||
+      (state.mode !== "idle" && typeof state.startedAt !== "number")) {
+    state = { mode: "idle" };
+  }
+
+  var log = store.get(KEY.log, []);
+  if (!Array.isArray(log)) log = [];
+  log = log.filter(function(x){ return x && typeof x.start === "number" && typeof x.end === "number" && x.end > x.start; });
+
+  function now(){ return Date.now(); }
+  function pad(n){ return String(n).padStart(2, "0"); }
+  function clock(sec){
+    sec = Math.max(0, sec);
+    var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
+    return h ? h + ":" + pad(m) + ":" + pad(s) : pad(m) + ":" + pad(s);
+  }
+  function up(ms){ return clock(Math.floor(ms / 1000)); }
+  function down(ms){ return clock(Math.ceil(ms / 1000)); }
+  function minutesText(ms){
+    var min = Math.floor(ms / 60000);
+    return min < 60 ? min + "分" : Math.floor(min / 60) + "時間" + (min % 60) + "分";
+  }
+  function hm(ts){ var d = new Date(ts); return d.getHours() + ":" + pad(d.getMinutes()); }
+  function dayKey(ts){ var d = new Date(ts); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+
+  function limitMs(){ return (state.mode === "break" ? settings.rest : settings.target) * 60000; }
+  function elapsed(){ return state.mode === "idle" ? 0 : Math.max(0, now() - state.startedAt); }
+  function view(){
+    if (state.mode === "study") return elapsed() >= limitMs() ? "over" : "study";
+    if (state.mode === "break") return elapsed() >= limitMs() ? "restover" : "break";
+    return "idle";
+  }
+  function saveState(){ store.set(KEY.state, state); }
+  function saveLog(){ store.set(KEY.log, log); }
+  function saveSettings(){ store.set(KEY.settings, settings); }
+
+  /* ---------- file store (the break sound lives in this browser only) ---------- */
+  var idb = (function(){
+    var dbp = null;
+    function open(){
+      if (dbp) return dbp;
+      dbp = new Promise(function(res, rej){
+        try {
+          if (!window.indexedDB) { rej(new Error("no-idb")); return; }
+          var r = window.indexedDB.open("kugiri", 1);
+          r.onupgradeneeded = function(){ r.result.createObjectStore("files"); };
+          r.onsuccess = function(){ res(r.result); };
+          r.onerror = function(){ rej(r.error); };
+        } catch(e) { rej(e); }
+      });
+      return dbp;
+    }
+    function run(mode, fn){
+      return open().then(function(db){
+        return new Promise(function(res, rej){
+          var t = db.transaction("files", mode);
+          var req = fn(t.objectStore("files"));
+          t.oncomplete = function(){ res(req ? req.result : undefined); };
+          t.onerror = t.onabort = function(){ rej(t.error); };
+        });
+      });
+    }
+    return {
+      get: function(k){ return run("readonly", function(s){ return s.get(k); }); },
+      put: function(k, v){ return run("readwrite", function(s){ return s.put(v, k); }); },
+      del: function(k){ return run("readwrite", function(s){ return s["delete"](k); }); }
+    };
+  })();
+
+  /* ---------- sound ----------
+     Chimes are scheduled on the audio clock when a phase starts, so they ring on time
+     even if the browser slows down timers in a background tab. The 250ms tick is a backup. */
+  var ctx = null, master = null, pending = null;
+  function ensureAudio(){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!ctx) {
+      try {
+        ctx = new AC();
+        master = ctx.createGain();
+        master.gain.value = settings.volume;
+        master.connect(ctx.destination);
+      } catch(e) { ctx = null; master = null; return null; }
+    }
+    if (ctx.state !== "running" && ctx.resume) {
+      var p = ctx.resume();
+      if (p && p.catch) p.catch(function(){});
+    }
+    return ctx;
+  }
+  function hold(param){
+    var t = ctx.currentTime;
+    if (param.cancelAndHoldAtTime) { param.cancelAndHoldAtTime(t); }
+    else { var v = param.value; param.cancelScheduledValues(t); param.setValueAtTime(v, t); }
+    return t;
+  }
+  function bell(t, freq, peak, dur, out){
+    var env = ctx.createGain();
+    env.gain.setValueAtTime(0.0001, t);
+    env.gain.exponentialRampToValueAtTime(peak, t + 0.012);
+    env.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    env.connect(out);
+    [[1, 1], [2, 0.2], [3.01, 0.06]].forEach(function(p){
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.value = freq * p[0];
+      g.gain.value = p[1];
+      o.connect(g); g.connect(env);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+  function chime(kind, t){
+    var group = ctx.createGain();
+    group.connect(master);
+    if (kind === "target") {
+      bell(t, 659.25, 0.55, 2.2, group);
+      bell(t + 0.6, 523.25, 0.55, 2.8, group);
+    } else {
+      bell(t, 523.25, 0.45, 1.6, group);
+      bell(t + 0.3, 659.25, 0.45, 1.6, group);
+      bell(t + 0.6, 783.99, 0.55, 2.6, group);
+    }
+    return group;
+  }
+  function cancelPending(){
+    if (pending && pending.group) { try { pending.group.disconnect(); } catch(e){} }
+    pending = null;
+  }
+  function scheduleForState(){
+    cancelPending();
+    if (!ctx || state.mode === "idle" || state.chimed) return;
+    var rem = (limitMs() - elapsed()) / 1000;
+    if (rem <= 0) return;
+    var kind = state.mode === "study" ? "target" : "rest";
+    var t = ctx.currentTime + rem;
+    pending = { kind: kind, at: t, group: chime(kind, t) };
+  }
+  function checkChime(){
+    if (state.mode === "idle" || state.chimed) return;
+    if (elapsed() < limitMs()) return;
+    var kind = state.mode === "study" ? "target" : "rest";
+    var onTime = pending && ctx && ctx.state === "running" && ctx.currentTime >= pending.at - 0.5;
+    if (onTime) {
+      pending = null;
+    } else {
+      cancelPending();
+      if (ctx && ctx.state === "running") chime(kind, ctx.currentTime + 0.05);
+    }
+    state.chimed = true;
+    saveState();
+    if (kind === "rest") stopAmbient(false);
+  }
+
+  /* ---------- break sound ----------
+     The chosen file is decoded once and looped on the audio clock, which loops without a gap.
+     During a break its volume rises over 2 seconds and falls away over the last 3 seconds. */
+  var amb = { data: null, name: "", size: 0, buffer: null, decoding: null, src: null, gain: null, playing: false, mode: null, token: 0 };
+  var ambMsgTimer = null;
+  function ambMsg(text){
+    var m = $("#amb-msg");
+    m.textContent = text;
+    clearTimeout(ambMsgTimer);
+    ambMsgTimer = setTimeout(function(){ m.textContent = ""; }, 7000);
+  }
+  function decodeAmbient(){
+    if (amb.buffer) return Promise.resolve(amb.buffer);
+    if (amb.decoding) return amb.decoding;
+    if (!amb.data || !ensureAudio()) return Promise.reject(new Error("no-audio"));
+    var copy = amb.data.slice(0);
+    amb.decoding = new Promise(function(res, rej){
+      try {
+        var p = ctx.decodeAudioData(copy, res, rej);
+        if (p && p.catch) p.catch(rej);
+      } catch(e) { rej(e); }
+    }).then(function(b){ amb.buffer = b; amb.decoding = null; return b; },
+            function(e){ amb.decoding = null; throw e; });
+    return amb.decoding;
+  }
+  function killSource(){
+    if (amb.src) {
+      try { amb.src.stop(); } catch(e){}
+      try { amb.src.disconnect(); } catch(e){}
+      amb.src = null;
+    }
+  }
+  function setAmbientLevel(v, secs){
+    if (!amb.gain) return;
+    var t = hold(amb.gain.gain);
+    amb.gain.gain.linearRampToValueAtTime(v, t + secs);
+  }
+  function ambientEnvelope(){
+    if (!amb.playing || amb.mode !== "break" || !amb.gain || !amb.src) return;
+    var g = amb.gain.gain, vol = settings.ambientVolume;
+    var t = hold(g);
+    var rem = (limitMs() - elapsed()) / 1000;
+    if (rem <= 0.2) { g.linearRampToValueAtTime(0, t + 0.5); return; }
+    var outStart = t + Math.max(0.1, rem - 3);
+    g.linearRampToValueAtTime(vol, Math.min(t + 2, outStart));
+    g.setValueAtTime(vol, outStart);
+    g.linearRampToValueAtTime(0, t + rem);
+  }
+  function playAmbient(mode){
+    if (!amb.data || !ensureAudio()) return;
+    if (!amb.gain) {
+      amb.gain = ctx.createGain();
+      amb.gain.gain.value = 0;
+      amb.gain.connect(ctx.destination);
+    }
+    var token = ++amb.token;
+    amb.playing = true; amb.mode = mode;
+    renderAmbient();
+    decodeAmbient().then(function(buf){
+      if (token !== amb.token || !amb.playing) return;
+      killSource();
+      var s = ctx.createBufferSource();
+      s.buffer = buf; s.loop = true;
+      s.connect(amb.gain);
+      s.start(ctx.currentTime + 0.02, Math.random() * buf.duration * 0.9);
+      amb.src = s;
+      if (mode === "break") ambientEnvelope();
+      else setAmbientLevel(settings.ambientVolume, 0.8);
+    }).catch(function(){
+      if (token !== amb.token) return;
+      amb.playing = false; amb.mode = null;
+      renderAmbient();
+      ambMsg("この音声ファイルは再生できませんでした。MP3かM4Aのファイルを試してください。");
+    });
+  }
+  function stopAmbient(immediate){
+    amb.token++;
+    amb.playing = false; amb.mode = null;
+    if (!amb.src || !amb.gain) { killSource(); renderAmbient(); return; }
+    if (immediate) {
+      hold(amb.gain.gain);
+      amb.gain.gain.setValueAtTime(0, ctx.currentTime);
+      killSource();
+    } else {
+      var t = hold(amb.gain.gain);
+      amb.gain.gain.linearRampToValueAtTime(0, t + 0.6);
+      var s = amb.src; amb.src = null;
+      try { s.stop(t + 0.7); } catch(e){}
+    }
+    renderAmbient();
+  }
+  function canAmbientNow(){
+    return settings.ambientOn && !!amb.data && state.mode === "break" && elapsed() < limitMs();
+  }
+  function renderAmbient(){
+    var has = !!amb.data;
+    var n = $("#amb-name");
+    n.textContent = has ? amb.name + "（" + (amb.size / 1048576).toFixed(1) + "MB）" : "まだ選ばれていません";
+    n.classList.toggle("muted", !has);
+    n.classList.toggle("playing", amb.playing);
+    $("#amb-preview").disabled = !has;
+    $("#amb-clear").disabled = !has;
+    $("#amb-preview").textContent = amb.playing ? "止める" : "試聴";
+    $("#amb-stop").hidden = !(amb.playing && state.mode === "break");
+  }
+
+  /* keep the screen awake while a phase is running, where the browser allows it */
+  var wl = null;
+  function wake(on){
+    try {
+      if (on) {
+        if (!wl && "wakeLock" in navigator && document.visibilityState === "visible") {
+          navigator.wakeLock.request("screen").then(function(lock){
+            wl = lock;
+            wl.addEventListener("release", function(){ wl = null; });
+          }).catch(function(){ wl = null; });
+        }
+      } else if (wl) {
+        var w = wl; wl = null;
+        w.release().catch(function(){});
+      }
+    } catch(e) { wl = null; }
+  }
+
+  /* ---------- notices ---------- */
+  var noticeTimer = null;
+  function notice(msg){
+    var n = $("#notice");
+    n.textContent = msg;
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(function(){ n.textContent = ""; }, 4500);
+  }
+
+  /* ---------- actions ---------- */
+  function startStudy(){
+    ensureAudio(); hideBanner(); disarm();
+    stopAmbient(false);
+    state = { mode: "study", startedAt: now(), chimed: false };
+    saveState(); scheduleForState(); wake(true); renderAll();
+  }
+  function recordStudy(){
+    if (state.mode !== "study") return false;
+    var s = state.startedAt, e = now();
+    if (e - s < 60000) return false;
+    log.push({ start: s, end: e });
+    var cutoff = e - 90 * 86400000;
+    log = log.filter(function(x){ return x.end >= cutoff; });
+    saveLog();
+    return true;
+  }
+  function takeBreak(){
+    ensureAudio(); hideBanner(); disarm();
+    var ok = recordStudy();
+    state = { mode: "break", startedAt: now(), chimed: false };
+    saveState(); scheduleForState();
+    if (canAmbientNow()) playAmbient("break");
+    wake(true); renderAll();
+    if (!ok) notice("1分未満だったので、今回は記録していません。");
+  }
+  function endStudy(){
+    var ok = recordStudy();
+    toIdle();
+    notice(ok ? "記録しました。" : "1分未満だったので、今回は記録していません。");
+  }
+  function toIdle(){
+    cancelPending();
+    stopAmbient(false);
+    state = { mode: "idle" };
+    saveState(); wake(false); disarm(); renderAll();
+  }
+  function primary(){
+    if (state.mode === "study") takeBreak();
+    else startStudy();
+  }
+
+  var discardTimer = null;
+  function disarm(){
+    if (discardTimer) { clearTimeout(discardTimer); discardTimer = null; }
+    var b = $("#discard");
+    b.textContent = "記録せずにやめる";
+    b.classList.remove("armed");
+  }
+  function discard(){
+    if (discardTimer) { disarm(); toIdle(); notice("記録せずに終えました。"); return; }
+    var b = $("#discard");
+    b.textContent = "もう一度押すと、記録せずに終えます";
+    b.classList.add("armed");
+    discardTimer = setTimeout(disarm, 4000);
+  }
+
+  /* ---------- rendering ---------- */
+  var C = 2 * Math.PI * 100;
+  var LABEL = { idle: "待機中", study: "勉強中", over: "目安を過ぎました", "break": "休憩中", restover: "休憩終了" };
+  var tickKey = "";
+
+  function buildTicks(){
+    var minutes = state.mode === "break" ? settings.rest : settings.target;
+    var key = (state.mode === "break" ? "b" : "s") + minutes;
+    if (key === tickKey) return;
+    tickKey = key;
+    var g = $("#ticks");
+    while (g.firstChild) g.removeChild(g.firstChild);
+    var NS = "http://www.w3.org/2000/svg";
+    var step = minutes <= 60 ? 1 : 5;
+    for (var m = 0; m < minutes; m += step) {
+      var a = (m / minutes) * Math.PI * 2;
+      var major = m % 5 === 0;
+      var r1 = 90, r2 = major ? 80 : 85;
+      var l = document.createElementNS(NS, "line");
+      l.setAttribute("x1", (120 + r1 * Math.sin(a)).toFixed(2));
+      l.setAttribute("y1", (120 - r1 * Math.cos(a)).toFixed(2));
+      l.setAttribute("x2", (120 + r2 * Math.sin(a)).toFixed(2));
+      l.setAttribute("y2", (120 - r2 * Math.cos(a)).toFixed(2));
+      l.setAttribute("class", major ? "tick major" : "tick");
+      g.appendChild(l);
+    }
+  }
+  function setRing(frac){
+    var p = $("#prog");
+    p.style.strokeDashoffset = (C * (1 - frac)).toFixed(2);
+    p.style.opacity = frac > 0.001 ? "1" : "0";
+  }
+  function renderMeta(){
+    $("#meta").textContent = "目安 " + settings.target + "分 ・ 休憩 " + settings.rest + "分";
+  }
+  function renderHint(){
+    var v = view(), t = settings.target, r = settings.rest;
+    var text = {
+      idle: "はじめると時間を数えます。" + t + "分で一度だけ鳴り、そのあとも止まらずに数え続けます。",
+      study: t + "分で一度だけ鳴ります。鳴っても止まりません。",
+      over: "区切りのいいところで「休憩する」を押してください。",
+      "break": r + "分で鳴ります。画面から目を離して休みましょう。",
+      restover: "準備ができたら「勉強を再開」を押してください。"
+    };
+    $("#hint").textContent = text[v];
+  }
+  function renderButtons(){
+    var m = state.mode;
+    $("#act-idle").hidden = m !== "idle";
+    $("#act-study").hidden = m !== "study";
+    $("#act-break").hidden = m !== "break";
+    $("#discard").hidden = m !== "study";
+    renderAmbient();
+  }
+  function renderTimer(){
+    buildTicks();
+    var v = view(), el = elapsed(), lim = limitMs();
+    var panel = $("#panel");
+    if (panel.dataset.mode !== v) {
+      panel.dataset.mode = v;
+      $("#chip").textContent = LABEL[v];
+      renderHint();
+    }
+    var d, sub = "", frac = 0;
+    if (v === "idle") { d = clock(0); }
+    else if (v === "study") { d = up(el); sub = "目安まで " + down(lim - el); frac = el / lim; }
+    else if (v === "over") { d = up(el); sub = "目安から +" + up(el - lim); frac = 1; }
+    else if (v === "break") { d = down(lim - el); sub = "休憩 " + settings.rest + "分"; frac = 1 - el / lim; }
+    else { d = "+" + up(el - lim); sub = "休憩の時間を過ぎています"; frac = 0; }
+    var dg = $("#digits");
+    if (dg.textContent !== d) dg.textContent = d;
+    dg.classList.toggle("long", d.length > 6);
+    var sb = $("#sub");
+    if (sb.textContent !== sub) sb.textContent = sub;
+    setRing(clamp(frac, 0, 1));
+    var title = state.mode === "idle" ? "区切りタイマー" : d + " " + LABEL[v] + "｜区切りタイマー";
+    if (document.title !== title) document.title = title;
+  }
+
+  function todaySessions(){
+    var k = dayKey(now());
+    return log.filter(function(x){ return dayKey(x.start) === k; })
+              .sort(function(a, b){ return b.start - a.start; });
+  }
+  function renderTotals(){
+    var list = todaySessions();
+    var total = list.reduce(function(s, x){ return s + (x.end - x.start); }, 0);
+    if (state.mode === "study" && dayKey(state.startedAt) === dayKey(now())) total += elapsed();
+    var min = Math.floor(total / 60000);
+    $("#t-count").textContent = list.length;
+    $("#t-min").textContent = min;
+    $("#t-hm").textContent = min >= 60 ? "（" + Math.floor(min / 60) + "時間" + (min % 60) + "分）" : "";
+  }
+  function row(start, end, running){
+    var li = document.createElement("li");
+    var t = document.createElement("span");
+    t.className = "time";
+    t.textContent = hm(start) + "–" + (running ? "" : hm(end));
+    var len = document.createElement("span");
+    len.className = "len";
+    len.textContent = running ? "進行中" : minutesText(end - start);
+    li.appendChild(t); li.appendChild(len);
+    if (running) {
+      li.className = "running";
+      li.appendChild(document.createElement("span"));
+    } else {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "del"; b.textContent = "削除";
+      b.dataset.start = String(start);
+      b.setAttribute("aria-label", hm(start) + "からの記録を削除");
+      li.appendChild(b);
+    }
+    return li;
+  }
+  function renderLog(){
+    var ul = $("#sessions");
+    ul.textContent = "";
+    if (state.mode === "study" && dayKey(state.startedAt) === dayKey(now())) {
+      ul.appendChild(row(state.startedAt, null, true));
+    }
+    todaySessions().forEach(function(x){ ul.appendChild(row(x.start, x.end, false)); });
+    $("#empty").hidden = ul.childElementCount > 0;
+    renderWeek(); renderTotals();
+  }
+  var WD = ["日","月","火","水","木","金","土"];
+  function renderWeek(){
+    var box = $("#week");
+    box.textContent = "";
+    var base = new Date(); base.setHours(0, 0, 0, 0);
+    var days = [];
+    for (var i = 6; i >= 0; i--) { var d = new Date(base); d.setDate(base.getDate() - i); days.push(d); }
+    var sums = days.map(function(d){
+      var k = dayKey(d.getTime());
+      var ms = log.filter(function(x){ return dayKey(x.start) === k; })
+                  .reduce(function(s, x){ return s + (x.end - x.start); }, 0);
+      return Math.floor(ms / 60000);
+    });
+    var max = Math.max.apply(null, [60].concat(sums));
+    var total = 0;
+    days.forEach(function(d, i){
+      var m = sums[i]; total += m;
+      var col = document.createElement("div");
+      col.className = "day" + (i === 6 ? " today" : "");
+      col.title = (d.getMonth() + 1) + "/" + d.getDate() + " " + m + "分";
+      var val = document.createElement("span"); val.className = "val"; val.textContent = m ? String(m) : "–";
+      var bar = document.createElement("span"); bar.className = "bar" + (m ? "" : " zero");
+      bar.style.height = Math.max(2, Math.round(m / max * 84)) + "px";
+      var lab = document.createElement("span"); lab.className = "dlabel"; lab.textContent = i === 6 ? "今日" : WD[d.getDay()];
+      col.appendChild(val); col.appendChild(bar); col.appendChild(lab);
+      box.appendChild(col);
+    });
+    $("#w-total").textContent = total + "分";
+  }
+  function renderAll(){
+    tickKey = "";
+    renderMeta(); renderButtons(); renderTimer(); renderHint(); renderLog();
+  }
+
+  /* ---------- settings ---------- */
+  function applyTimes(){
+    settings.target = clamp(Math.round(num($("#s-target").value, settings.target)), 1, 180);
+    settings.rest = clamp(Math.round(num($("#s-rest").value, settings.rest)), 1, 60);
+    $("#s-target").value = settings.target;
+    $("#s-rest").value = settings.rest;
+    saveSettings();
+    if (state.mode !== "idle" && state.chimed && elapsed() < limitMs()) { state.chimed = false; saveState(); }
+    scheduleForState();
+    ambientEnvelope();
+    tickKey = "";
+    renderMeta(); renderTimer(); renderHint();
+  }
+
+  /* ---------- wiring ---------- */
+  var banner = $("#audio-banner");
+  function hideBanner(){ banner.hidden = true; }
+  function onFirstGesture(){
+    document.removeEventListener("pointerdown", onFirstGesture, true);
+    document.removeEventListener("keydown", onFirstGesture, true);
+    if (!ctx) { ensureAudio(); scheduleForState(); }
+    if (canAmbientNow() && !amb.playing) playAmbient("break");
+    hideBanner();
+  }
+  document.addEventListener("pointerdown", onFirstGesture, true);
+  document.addEventListener("keydown", onFirstGesture, true);
+
+  $("#b-start").addEventListener("click", startStudy);
+  $("#b-break").addEventListener("click", takeBreak);
+  $("#b-end").addEventListener("click", endStudy);
+  $("#b-resume").addEventListener("click", startStudy);
+  $("#b-endbreak").addEventListener("click", toIdle);
+  $("#discard").addEventListener("click", discard);
+  $("#amb-stop").addEventListener("click", function(){ stopAmbient(false); });
+
+  $("#sessions").addEventListener("click", function(e){
+    var b = e.target.closest ? e.target.closest("button.del") : null;
+    if (!b) return;
+    if (b.classList.contains("armed")) {
+      var s = Number(b.dataset.start);
+      log = log.filter(function(x){ return x.start !== s; });
+      saveLog(); renderLog();
+      notice("記録を1件削除しました。");
+      return;
+    }
+    b.classList.add("armed");
+    b.textContent = "本当に削除";
+    setTimeout(function(){
+      if (b.isConnected) { b.classList.remove("armed"); b.textContent = "削除"; }
+    }, 3000);
+  });
+
+  $("#s-target").value = settings.target;
+  $("#s-rest").value = settings.rest;
+  $("#s-vol").value = settings.volume;
+  $("#s-target").addEventListener("change", applyTimes);
+  $("#s-rest").addEventListener("change", applyTimes);
+  $("#s-vol").addEventListener("input", function(){
+    settings.volume = clamp(num(this.value, 0.6), 0, 1);
+    if (master) master.gain.value = settings.volume;
+    saveSettings();
+  });
+  function test(kind){
+    if (ensureAudio()) chime(kind, ctx.currentTime + 0.05);
+    else notice("このブラウザでは音を鳴らせません。");
+  }
+  $("#test-target").addEventListener("click", function(){ test("target"); });
+  $("#test-rest").addEventListener("click", function(){ test("rest"); });
+
+  /* break sound controls */
+  $("#amb-on").checked = settings.ambientOn;
+  $("#amb-vol").value = settings.ambientVolume;
+  $("#amb-on").addEventListener("change", function(){
+    settings.ambientOn = this.checked;
+    saveSettings();
+    if (!settings.ambientOn && amb.playing && amb.mode === "break") stopAmbient(false);
+    else if (canAmbientNow() && !amb.playing) playAmbient("break");
+  });
+  $("#amb-vol").addEventListener("input", function(){
+    settings.ambientVolume = clamp(num(this.value, 0.5), 0, 1);
+    saveSettings();
+    if (amb.playing && amb.mode === "break") ambientEnvelope();
+    else if (amb.playing) setAmbientLevel(settings.ambientVolume, 0.2);
+  });
+  $("#amb-pick").addEventListener("click", function(){
+    ensureAudio();
+    $("#amb-file").click();
+  });
+  $("#amb-file").addEventListener("change", function(){
+    var f = this.files && this.files[0];
+    this.value = "";
+    if (!f) return;
+    var okType = /^audio\//.test(f.type) || /\.(mp3|m4a|aac|wav|ogg|oga|flac)$/i.test(f.name);
+    if (!okType) { ambMsg("音声ファイルを選んでください（MP3やM4Aなど）。"); return; }
+    if (f.size > 50 * 1048576) { ambMsg("ファイルが大きすぎます。50MBまでのものを選んでください。"); return; }
+    stopAmbient(true);
+    ambMsg("読み込んでいます…");
+    f.arrayBuffer().then(function(buf){
+      amb.data = buf; amb.name = f.name; amb.size = f.size;
+      amb.buffer = null; amb.decoding = null;
+      renderAmbient();
+      return decodeAmbient();
+    }).then(function(b){
+      var long = b.duration > 15 * 60 ? "長いファイルはメモリを多く使うので、数分程度のものがおすすめです。" : "";
+      return idb.put("ambient", { name: f.name, type: f.type, size: f.size, data: amb.data })
+        .then(function(){ ambMsg("「" + f.name + "」（" + clock(Math.round(b.duration)) + "）を環境音にしました。" + long); },
+              function(){ ambMsg("このブラウザには保存できなかったので、ページを閉じるまでの間だけ使えます。"); });
+    }).catch(function(){
+      amb.data = null; amb.name = ""; amb.size = 0; amb.buffer = null;
+      renderAmbient();
+      ambMsg("このファイルは再生できませんでした。MP3かM4Aのファイルを試してください。");
+    });
+  });
+  $("#amb-preview").addEventListener("click", function(){
+    if (amb.playing) stopAmbient(false);
+    else playAmbient("preview");
+  });
+  $("#amb-clear").addEventListener("click", function(){
+    stopAmbient(true);
+    amb.data = null; amb.name = ""; amb.size = 0; amb.buffer = null; amb.decoding = null;
+    idb.del("ambient").catch(function(){});
+    renderAmbient();
+    ambMsg("環境音の設定を外しました。");
+  });
+
+  document.addEventListener("keydown", function(e){
+    if (e.code !== "Space" && e.key !== " ") return;
+    var tag = (e.target && e.target.tagName) || "";
+    if (/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(tag) || (e.target && e.target.isContentEditable)) return;
+    e.preventDefault();
+    primary();
+  });
+
+  var lastDay = dayKey(now());
+  function tick(){
+    checkChime();
+    renderTimer();
+    renderTotals();
+    var k = dayKey(now());
+    if (k !== lastDay) { lastDay = k; renderLog(); }
+  }
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "visible") {
+      tick();
+      if (state.mode !== "idle") wake(true);
+    }
+  });
+
+  /* restore a phase that was running when the page was closed or reloaded */
+  if (state.mode !== "idle") {
+    if (!state.chimed && elapsed() >= limitMs()) { state.chimed = true; saveState(); }
+    banner.hidden = false;
+    wake(true);
+  }
+  renderAll();
+  setInterval(tick, 250);
+
+  idb.get("ambient").then(function(rec){
+    if (rec && rec.data && !amb.data) {
+      amb.data = rec.data; amb.name = rec.name || "環境音"; amb.size = rec.size || rec.data.byteLength;
+      renderAmbient();
+    }
+  }).catch(function(){});
+})();
+</script>
+
+</body></html>
